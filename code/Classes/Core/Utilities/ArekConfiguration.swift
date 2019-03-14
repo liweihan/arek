@@ -26,7 +26,7 @@
 import Foundation
 
 public struct ArekConfiguration {
-    var frequency: ArekPermissionFrequency = .OnceADay
+    var frequency: ArekPermissionFrequency = .Always
     var presentInitialPopup: Bool = true
     var presentReEnablePopup: Bool = true
     

@@ -44,7 +44,7 @@ public struct ArekPopupData {
                 image: String = "",
                 allowButtonTitle: String = "",
                 denyButtonTitle: String = "",
-                type: ArekPopupType = .codeido,
+                type: ArekPopupType = .native,
                 styling: ArekPopupStyle? = nil) {
         
         self.title = title
