@@ -33,13 +33,15 @@ public struct ArekConfiguration {
     private let week = 60.0*60.0*24.0*7.0
     private let hour = 60.0*60.0
     
-    public init(frequency: ArekPermissionFrequency, presentInitialPopup: Bool, presentReEnablePopup: Bool) {
+    public init(frequency: ArekPermissionFrequency,
+                presentInitialPopup: Bool,
+                presentReEnablePopup: Bool) {
         self.frequency = frequency
         self.presentInitialPopup = presentInitialPopup
         self.presentReEnablePopup = presentReEnablePopup
     }
     
-    func reEnablePopupPresented(permission: ArekPermissionProtocol) {
+    func userTappedNotNow(permission: ArekPermissionProtocol) {
         UserDefaults.standard.set(Date(), forKey: permission.identifier)
         UserDefaults.standard.synchronize()
     }

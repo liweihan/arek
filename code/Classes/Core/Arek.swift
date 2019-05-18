@@ -207,11 +207,7 @@ open class ArekBasePermission {
             alert.dismiss(animated: true, completion: nil)
             
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-            if #available(iOS 10.0, *) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            } else {
-                UIApplication.shared.openURL(url)
-            }
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
         
         let deny = UIAlertAction(title: denyButtonTitle, style: .cancel) { _ in
@@ -241,14 +237,16 @@ open class ArekBasePermission {
         switch status {
         case .notDetermined:
             self.manageInitialPopup(completion: completion)
-            break
+
         case .denied:
             self.presentReEnablePopup()
             return completion(.denied)
+
         case .authorized:
             return completion(.authorized)
+
         case .notAvailable:
-            break
+            return completion(.notAvailable)
         }
     }
 }

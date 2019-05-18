@@ -43,7 +43,7 @@ open class ArekPhoto: ArekBasePermission, ArekPermissionProtocol {
             return completion(.notDetermined)
         case .restricted, .denied:
             return completion(.denied)
-        case.authorized:
+        case .authorized:
             return completion(.authorized)
         }
     }
