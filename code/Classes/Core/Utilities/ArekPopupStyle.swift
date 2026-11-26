@@ -24,7 +24,10 @@
 //
 
 import Foundation
+import UIKit
 
+/// The look of a PMAlertController popup. PMAlertController was removed from AREK and a native alert cannot be
+/// styled, so nothing of this is applied any more; it stays so that code passing it keeps compiling.
 public struct ArekPopupStyle {
     var cornerRadius: CGFloat?
     var maskBackgroundColor: UIColor?

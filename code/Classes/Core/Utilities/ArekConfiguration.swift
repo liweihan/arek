@@ -29,10 +29,17 @@ public struct ArekConfiguration {
     var frequency: ArekPermissionFrequency = .Always
     var presentInitialPopup: Bool = true
     var presentReEnablePopup: Bool = true
-    
+
+    /// Where the date the re-enable popup was last shown is kept, one entry for each permission's identifier.
+    var defaults: UserDefaults = .standard
+    /// The calendar `.OnceADay` counts its days in: the user's own, so a day ends at their midnight.
+    var calendar: Calendar = .current
+    /// What time it is now; tests set their own.
+    var now: () -> Date = { Date() }
+
     private let week = 60.0*60.0*24.0*7.0
     private let hour = 60.0*60.0
-    
+
     public init(frequency: ArekPermissionFrequency,
                 presentInitialPopup: Bool,
                 presentReEnablePopup: Bool) {
@@ -40,47 +47,59 @@ public struct ArekConfiguration {
         self.presentInitialPopup = presentInitialPopup
         self.presentReEnablePopup = presentReEnablePopup
     }
-    
-    func userTappedNotNow(permission: ArekPermissionProtocol) {
-        UserDefaults.standard.set(Date(), forKey: permission.identifier)
-        UserDefaults.standard.synchronize()
+
+    /**
+     Records that the re-enable popup of a permission is on screen now; `canPresentReEnablePopup(identifier:)`
+     counts its frequency from this date. Called once the popup has been presented, so a popup that could not be
+     shown (no window to show it over) or was not allowed is never counted.
+     */
+    func reEnablePopupPresented(identifier: String) {
+        self.defaults.set(self.now(), forKey: ArekConfiguration.lastPresentedKey(identifier))
     }
-    
-    func canPresentReEnablePopup(permission: ArekPermissionProtocol) -> Bool {
+
+    /**
+     Whether the re-enable popup of a permission may be shown now.
+
+     A permission whose popup was never shown may always show it once. After that:
+     - `.Always`: every time.
+     - `.EveryHour`: once at least an hour has passed since it was last shown.
+     - `.OnceADay`: once the calendar day has changed since it was last shown (the user's calendar and time zone).
+     - `.OnceAWeek`: once at least seven days have passed since it was last shown.
+     - `.JustOnce`: never again.
+
+     A last date later than now means the device's clock was moved back; the popup may then be shown again.
+     */
+    func canPresentReEnablePopup(identifier: String) -> Bool {
         if !self.presentReEnablePopup {
             return false
         }
-        
-        switch self.frequency {
-        case .OnceADay:
-            guard let lastDate = self.lastDateForPermission(identifier: permission.identifier) else {
-                return false
-            }
-            
-            return !Calendar.current.isDateInToday(lastDate)
-        case .EveryHour:
-            guard let lastDate = self.lastDateForPermission(identifier: permission.identifier) else {
-                return false
-            }
-            
-            return Calendar.current.compare(lastDate, to: Date(), toGranularity: .hour) == ComparisonResult.orderedDescending
-        case .JustOnce:
-            return self.lastDateForPermission(identifier: permission.identifier) == nil
-        case .OnceAWeek:
-            guard let lastDate = self.lastDateForPermission(identifier: permission.identifier) else {
-                return false
-            }
-            
-            let ti = TimeInterval(week)
-            let lastDateInAWeek = lastDate.addingTimeInterval(ti)
-            
-            return Calendar.current.compare(lastDateInAWeek, to: Date(), toGranularity: .day) == ComparisonResult.orderedDescending
-        case .Always:
+
+        guard let lastDate = self.lastDateForPermission(identifier: identifier) else {
             return true
         }
+
+        let now = self.now()
+        let elapsed = now.timeIntervalSince(lastDate)
+
+        switch self.frequency {
+        case .Always:
+            return true
+        case .EveryHour:
+            return elapsed < 0 || elapsed >= hour
+        case .OnceADay:
+            return !self.calendar.isDate(lastDate, inSameDayAs: now)
+        case .OnceAWeek:
+            return elapsed < 0 || elapsed >= week
+        case .JustOnce:
+            return false
+        }
     }
-    
+
     private func lastDateForPermission(identifier: String) -> Date? {
-        return UserDefaults.standard.object(forKey: identifier) as? Date
+        return self.defaults.object(forKey: ArekConfiguration.lastPresentedKey(identifier)) as? Date
+    }
+
+    static func lastPresentedKey(_ identifier: String) -> String {
+        return "arek.reEnablePopup.lastPresented.\(identifier)"
     }
 }

@@ -28,7 +28,7 @@ import Foundation
 /*
  * Frequency to ask the user to present the request again
  */
-public enum ArekPermissionFrequency {
+public enum ArekPermissionFrequency: CaseIterable {
     case Always
     case EveryHour
     case OnceADay

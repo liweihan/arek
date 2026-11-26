@@ -26,6 +26,8 @@
 import Foundation
 
 public enum ArekPopupType {
+    /// PMAlertController was removed from AREK: a popup of this type is shown as a native alert.
+    @available(*, deprecated, message: "PMAlertController support was removed; the popup is shown as a native alert")
     case codeido
     case native
 }
@@ -33,10 +35,12 @@ public enum ArekPopupType {
 public struct ArekPopupData {
     var title: String!
     var message: String!
+    /// Not shown: a native alert has no image (it was PMAlertController's).
     var image: String!
     var allowButtonTitle: String!
     var denyButtonTitle: String!
     var type: ArekPopupType!
+    /// Not applied: a native alert cannot be styled (it was PMAlertController's).
     var styling: ArekPopupStyle?
 
     public init(title: String = "",

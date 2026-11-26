@@ -58,6 +58,12 @@ open class ArekBasePermission {
     var configuration: ArekConfiguration = ArekConfiguration(frequency: .Always, presentInitialPopup: true, presentReEnablePopup: true)
     var initialPopupData: ArekPopupData = ArekPopupData()
     var reEnablePopupData: ArekPopupData = ArekPopupData()
+
+    /**
+     Shows one of AREK's alerts and calls `onScreen` once it is on screen. Where there is nothing to show it over
+     (no key window), nothing is shown and `onScreen` is never called. Tests replace it.
+     */
+    var presentAlert: (_ alert: UIAlertController, _ onScreen: @escaping () -> Void) -> Void = ArekBasePermission.presentOverTopViewController
     
     public init(identifier: String) {
         let data = ArekLocalizationManager(permission: identifier)
@@ -98,36 +104,26 @@ open class ArekBasePermission {
         if self.configuration.presentInitialPopup {
             self.presentInitialPopup(title: self.initialPopupData.title,
                                      message: self.initialPopupData.message,
-                                     image: self.initialPopupData.image,
                                      allowButtonTitle: self.initialPopupData.allowButtonTitle,
                                      denyButtonTitle: self.initialPopupData.denyButtonTitle,
-                                     styling: self.initialPopupData.styling,
                                      completion: completion)
         } else {
             (self as? ArekPermissionProtocol)?.askForPermission(completion: completion)
         }
     }
     
+    /// Every popup type is shown as a native alert: PMAlertController (`.codeido`) was removed from AREK.
     private func presentInitialPopup(title: String,
                                      message: String,
-                                     image: String? = nil,
                                      allowButtonTitle: String,
                                      denyButtonTitle: String,
-                                     styling: ArekPopupStyle? = nil,
                                      completion: @escaping ArekPermissionResponse) {
-        
-        switch self.initialPopupData.type as ArekPopupType {
-        case .codeido:
-            fatalError()
-            break
-        case .native:
-            self.presentInitialNativePopup(title: title,
-                                           message: message,
-                                           allowButtonTitle: allowButtonTitle,
-                                           denyButtonTitle: denyButtonTitle,
-                                           completion: completion)
-            break
-        }
+        ArekBasePermission.noteNativeOnly(self.initialPopupData)
+        self.presentInitialNativePopup(title: title,
+                                       message: message,
+                                       allowButtonTitle: allowButtonTitle,
+                                       denyButtonTitle: denyButtonTitle,
+                                       completion: completion)
     }
     
     private func presentInitialNativePopup(title: String,
@@ -151,24 +147,16 @@ open class ArekBasePermission {
         alert.addAction(deny)
         alert.addAction(allow)
         
-        if var topController = UIApplication.shared.keyWindow?.rootViewController {
-            while let presentedViewController = topController.presentedViewController {
-                topController = presentedViewController
-            }
-
-            DispatchQueue.main.async {
-                topController.present(alert, animated: true, completion: nil)
-            }
-        }
+        self.presentAlert(alert) {}
     }
     
     private func presentReEnablePopup() {
         guard let permission = self as? ArekPermissionProtocol else { return }
         
-        if self.configuration.canPresentReEnablePopup(permission: permission) {
-            self.presentReEnablePopup(title: self.reEnablePopupData.title,
+        if self.configuration.canPresentReEnablePopup(identifier: permission.identifier) {
+            self.presentReEnablePopup(identifier: permission.identifier,
+                                      title: self.reEnablePopupData.title,
                                       message: self.reEnablePopupData.message,
-                                      image: self.reEnablePopupData.image,
                                       allowButtonTitle: self.reEnablePopupData.allowButtonTitle,
                                       denyButtonTitle: self.reEnablePopupData.denyButtonTitle)
         } else {
@@ -176,27 +164,22 @@ open class ArekBasePermission {
         }
     }
 
-    private func presentReEnablePopup(title: String,
+    /// Every popup type is shown as a native alert: PMAlertController (`.codeido`) was removed from AREK.
+    private func presentReEnablePopup(identifier: String,
+                                      title: String,
                                       message: String,
-                                      image: String?,
                                       allowButtonTitle: String,
                                       denyButtonTitle: String) {
-        
-        switch self.reEnablePopupData.type as ArekPopupType {
-        case .codeido:
-            fatalError()
-            break
-            
-        case .native:
-            self.presentReEnableNativePopup(title: title,
-                                            message: message,
-                                            allowButtonTitle: allowButtonTitle,
-                                            denyButtonTitle: denyButtonTitle)
-            break
-        }
+        ArekBasePermission.noteNativeOnly(self.reEnablePopupData)
+        self.presentReEnableNativePopup(identifier: identifier,
+                                        title: title,
+                                        message: message,
+                                        allowButtonTitle: allowButtonTitle,
+                                        denyButtonTitle: denyButtonTitle)
     }
     
-    private func presentReEnableNativePopup(title: String,
+    private func presentReEnableNativePopup(identifier: String,
+                                            title: String,
                                             message: String,
                                             allowButtonTitle: String,
                                             denyButtonTitle: String) {
@@ -217,14 +200,29 @@ open class ArekBasePermission {
         alert.addAction(deny)
         alert.addAction(allow)
         
-        if var topController = UIApplication.shared.keyWindow?.rootViewController {
+        // The frequency counts from the moment the popup is on screen: one that was never shown is never counted.
+        let configuration = self.configuration
+        self.presentAlert(alert) {
+            configuration.reEnablePopupPresented(identifier: identifier)
+        }
+    }
+
+    /// Shows `alert` over the key window's top view controller, on the main queue.
+    static func presentOverTopViewController(_ alert: UIAlertController, onScreen: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            guard var topController = UIApplication.shared.keyWindow?.rootViewController else { return }
             while let presentedViewController = topController.presentedViewController {
                 topController = presentedViewController
             }
-            
-            topController.present(alert, animated: true, completion: nil)
+            topController.present(alert, animated: true, completion: onScreen)
         }
+    }
 
+    /// A native alert has no image and no styling: say so where a developer asked for PMAlertController or styling.
+    private static func noteNativeOnly(_ data: ArekPopupData) {
+        if data.type != .native || data.styling != nil {
+            print("[🚨 Arek 🚨] PMAlertController support was removed: this popup is shown as a native alert, without image or styling")
+        }
     }
     
     open func manage(completion: @escaping ArekPermissionResponse) {
