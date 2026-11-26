@@ -3,11 +3,12 @@
 </p>
 <br />
 
-![Platform Version](https://cocoapod-badges.herokuapp.com/p/arek/badge.png)
-![Pod Version](https://cocoapod-badges.herokuapp.com/v/arek/0.0.6/badge.png)
+[![CI](https://github.com/liweihan/arek/actions/workflows/ci.yml/badge.svg)](https://github.com/liweihan/arek/actions/workflows/ci.yml)
+![Platform](https://img.shields.io/cocoapods/p/arek.svg)
+![Pod Version](https://img.shields.io/cocoapods/v/arek.svg)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
-![License](https://cocoapod-badges.herokuapp.com/l/arek/badge.png)
-[![Swift Version](https://img.shields.io/badge/Swift-3.0.x-orange.svg)]()
+![License](https://img.shields.io/cocoapods/l/arek.svg)
+![Swift Version](https://img.shields.io/badge/Swift-5.0-orange.svg)
 
 AREK is a clean and easy to use wrapper over any kind of iOS permission written in Swift.
 
@@ -28,19 +29,15 @@ Every goal could be easily reached using **AREK**.
 * show a popup to invite the user to re-enable the permission if it has been denied
 * manage through an easy configuration how many times to ask the user to re-enable the permission (Only once, every hour, once a day, weekly, always😷)
 
-🚨 AREK is a **Swift 4.2** and **Xcode 10** compatible project 🚨
+🚨 AREK is written in **Swift 5**, builds with **Xcode 16** or later and supports **iOS 12** and later 🚨
 
-Important!
-- If you want to use it with **Xcode 10**, swift 4.2, point to the version [4.0.1](https://github.com/ennioma/arek/releases/tag/4.0.1)
-- If you want to use it with **Xcode 9**, point to any prior version
-
+Older toolchains:
+- With **Xcode 10** and Swift 4.2, point to the version [4.0.1](https://github.com/ennioma/arek/releases/tag/4.0.1)
+- With **Xcode 9**, point to any prior version
 
 ## Build Status
 
-| Branch | Status |
-| ------------- | ------------- |
-| Master | [![BuddyBuild](https://dashboard.buddybuild.com/api/statusImage?appID=59a16154a7ae7b000183f1cf&branch=master&build=latest)](https://dashboard.buddybuild.com/apps/59a16154a7ae7b000183f1cf/build/latest?branch=master) |
-| Develop | [![BuddyBuild](https://dashboard.buddybuild.com/api/statusImage?appID=59a16154a7ae7b000183f1cf&branch=master&build=latest)](https://dashboard.buddybuild.com/apps/59a16154a7ae7b000183f1cf/build/latest?branch=develop) |
+[GitHub Actions](https://github.com/liweihan/arek/actions/workflows/ci.yml) builds the framework and runs its tests (`arekTests`) in an iPhone simulator on every push: see [How to check a change](#check).
 
 # Table of Contents
 1. [Implemented permissions](#implementedPermissions)
@@ -117,7 +114,19 @@ An `ArekConfiguration` is made up by:
 > **frequency**: ArekPermissionFrequency (.Always, .EveryHour, .OnceADay, .OnceAWeek, .JustOnce)
 This frequency value is related to how often you want to the user to re-enable a permission if that one has been disallowed.
 
-> Set by default to **.OnceADay**
+> Set by default to **.Always**
+
+The re-enable popup of a permission is always shown the first time. AREK records when it was last on screen (in `UserDefaults.standard`, one entry for each permission), and from then on:
+
+| Frequency | The re-enable popup is shown again |
+| :-------- | :--------------------------------- |
+| `.Always` | every time |
+| `.EveryHour` | once at least an hour has passed |
+| `.OnceADay` | once the calendar day has changed (the user's calendar and time zone) |
+| `.OnceAWeek` | once at least seven days have passed |
+| `.JustOnce` | never |
+
+A popup that could not be shown (no window to present it over) is not counted. If the device's clock was moved back before the last showing, the popup may be shown again.
 
 ----------
 
@@ -134,30 +143,25 @@ This is the popup used to **kindly** to the user to re-enable that permission. T
 > Set by defaul to **true**
 
 ## Configure the initial and the re-enable popup: `ArekPopupData`
-`ArekPopupData` is the struct used to configure both the pre-permission popup and the re-enable popup. These popups could be instances of the amazing [PMAlertController](https://github.com/Codeido/PMAlertController) by [Codeido](http://www.codeido.com/) or native iOS alerts.
+`ArekPopupData` is the struct used to configure both the pre-permission popup and the re-enable popup. Both are shown as native iOS alerts (`UIAlertController`).
 
 The configuration is the following:
-```ruby
+```swift
 public struct ArekPopupData {
-    var title: String!
-    var message: String!
-    var image: String!
-    var type: ArekPopupType!
-
-    public init(title: String = "", message: String = "", image: String = "", type: ArekPopupType = .codeido) {
-        self.title = title
-        self.message = message
-        self.image = image
-        self.type = type
-    }
+    public init(title: String = "",
+                message: String = "",
+                image: String = "",
+                allowButtonTitle: String = "",
+                denyButtonTitle: String = "",
+                type: ArekPopupType = .native,
+                styling: ArekPopupStyle? = nil)
 }
 ```
 
-This is an example of the `ArekContacts` pre-enable popup using `PMAlertController`:
-<br />
-<img src="https://github.com/ennioma/arek/blob/master/code/Assets/arek_contacts.png" width="150">
-
-If you want to present a native `UIAlertController` set the type to `.native` otherwise if you want to setup a `PMAlertController` set the type to `.codeido`.
+- `title`, `message`: the alert's title and message.
+- `allowButtonTitle`, `denyButtonTitle`: its two buttons; the deny button cancels.
+- `type`: `.native`. The old `.codeido` (a [PMAlertController](https://github.com/Codeido/PMAlertController) popup) is deprecated: PMAlertController was removed from AREK, so a popup of that type is shown as a native alert too (it used to stop the app with a fatal error).
+- `image`, `styling`: not applied. A native alert has no image and cannot be styled; both were PMAlertController's and are kept only so that code using them still compiles. AREK prints a warning when a popup asks for them.
 
 ## Localized Strings
 **AREK** by convention expects to find localized strings in your Localizable files in order to configure the UI.
@@ -167,7 +171,7 @@ In the following table there are the configurations for:
 - Pre-permission popup message
 - Re-enable popup title
 - Re-enable popup message
-- Popup image for that permission
+- Popup image for that permission (not shown: a native alert has no image)
 - Allow button title
 - Deny button title
 
@@ -230,7 +234,6 @@ and add the following paths under "Input Files":
 
 ```ruby
 $(SRCROOT)/Carthage/Build/iOS/arek.framework
-$(SRCROOT)/Carthage/Build/iOS/PMAlertController.framework
 ```
 
 ## Swift Package Manager
@@ -259,9 +262,19 @@ Contributions are welcome 🙌  If you'd like to improve this projects I've shar
 
 For any information or request feel free to contact me on twitter (@ennioma).
 
+<a name="check"></a>
+## How to check a change
+| Command | Where | What it checks |
+| :------ | :---- | :------------- |
+| `sh scripts/check-project.sh` | Linux or a Mac | `arek.xcodeproj` compiles every file of `code/Classes` and `arekTests`, its scheme tests `arekTests`, its Swift version and iOS deployment target are the podspec's, and every switch over an iOS status has an `@unknown default` (so that a newer SDK cannot break the build) |
+| `sh scripts/test-core.sh` | Linux or a Mac (Swift toolchain) | every test of `arekTests` against AREK's core (the popups, and when the re-enable popup may be shown again), with SwiftPM and a stand-in for UIKit |
+| `sh scripts/xcode.sh build` | a Mac with Xcode | the framework builds for the iOS simulator |
+| `sh scripts/xcode.sh test` | a Mac with Xcode | every test of `arekTests` in an iPhone simulator |
+
+[GitHub Actions](.github/workflows/ci.yml) runs all four on every push.
+
 <a name="todo"></a>
 # TODO
-- [] Provide a way to inject a custom PMAlertController in a permission
 - [] Provide a way to inject the popup type when the `init()` is called on a permission
 - [] Update the Swift Package Manager installation
 

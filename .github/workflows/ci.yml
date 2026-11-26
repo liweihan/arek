@@ -1,0 +1,28 @@
+# Proves a change of AREK on a Mac: the checks the factory's Linux boxes also run (scripts/check-project.sh,
+# scripts/test-core.sh), then the iOS framework's build and its XCTest target arekTests in an iPhone simulator.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode
+        run: xcodebuild -version
+      - name: Project and podspec agree
+        run: sh scripts/check-project.sh
+      - name: Core tests (SwiftPM)
+        run: sh scripts/test-core.sh
+      - name: Build the framework
+        run: sh scripts/xcode.sh build
+      - name: arekTests in the iOS simulator
+        run: sh scripts/xcode.sh test

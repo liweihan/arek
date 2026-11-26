@@ -7,8 +7,8 @@ Pod::Spec.new do |s|
   s.author           = { 'Ennio Masi' => 'ennio.masi@gmail.com' }
   s.source           = { :git => 'https://github.com/ennioma/arek.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/ennioma'
-  s.ios.deployment_target = '10.0'
-  s.swift_version    = '4.2'
+  s.ios.deployment_target = '12.0'
+  s.swift_version    = '5.0'
   s.source_files = 'code/Classes/**/*', 'code/Classes/Core/**/*', 'code/Classes/Permissions/**/*'
   s.exclude_files = 'Example/*'
 

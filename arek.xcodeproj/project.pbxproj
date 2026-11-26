@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		20AFE92E9804F4C2E3117C1F /* ArekConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */; };
+		2B89620B7B7B80F76E01FFFA /* ArekPopupStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */; };
+		62FADC2A6542D8E3BA1C2AFF /* ArekPopupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */; };
 		6BB101BA1E7044BA000CA36F /* arek.h in Headers */ = {isa = PBXBuildFile; fileRef = 6BB101B81E7044BA000CA36F /* arek.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6BB101E31E70450B000CA36F /* .gitkeep in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C11E70450B000CA36F /* .gitkeep */; };
 		6BB101E41E70450B000CA36F /* arek.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C21E70450B000CA36F /* arek.png */; };
@@ -37,7 +40,18 @@
 		6BB101FD1E70450B000CA36F /* ArekLocationAlways.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101E11E70450B000CA36F /* ArekLocationAlways.swift */; };
 		6BB101FE1E70450B000CA36F /* ArekLocationWhenInUse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101E21E70450B000CA36F /* ArekLocationWhenInUse.swift */; };
 		B6999B072154994A00E5D92A /* ArekSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6999B062154994A00E5D92A /* ArekSiri.swift */; };
+		B8B58FEBC47DED43EDDF7E53 /* arek.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6BB101B51E7044BA000CA36F /* arek.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		949C2FF6BB13A17F8B84DF48 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6BB101AC1E7044BA000CA36F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6BB101B41E7044BA000CA36F;
+			remoteInfo = arek;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		6BB101B51E7044BA000CA36F /* arek.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = arek.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,7 +85,11 @@
 		6BB101E01E70450B000CA36F /* ArekBaseLocationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekBaseLocationDelegate.swift; sourceTree = "<group>"; };
 		6BB101E11E70450B000CA36F /* ArekLocationAlways.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekLocationAlways.swift; sourceTree = "<group>"; };
 		6BB101E21E70450B000CA36F /* ArekLocationWhenInUse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekLocationWhenInUse.swift; sourceTree = "<group>"; };
+		6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekPopupStyle.swift; sourceTree = "<group>"; };
+		84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekPopupTests.swift; sourceTree = "<group>"; };
 		B6999B062154994A00E5D92A /* ArekSiri.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArekSiri.swift; sourceTree = "<group>"; };
+		E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekConfigurationTests.swift; sourceTree = "<group>"; };
+		EF9F962770F44DF171EFF5CB /* arekTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = arekTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +100,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BC2429437E7DF764A5237850 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B8B58FEBC47DED43EDDF7E53 /* arek.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,6 +115,7 @@
 			isa = PBXGroup;
 			children = (
 				6BB101B71E7044BA000CA36F /* arek */,
+				E30ADEB8810211F0F3C78015 /* arekTests */,
 				6BB101B61E7044BA000CA36F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				6BB101B51E7044BA000CA36F /* arek.framework */,
+				EF9F962770F44DF171EFF5CB /* arekTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -151,6 +179,7 @@
 				6BB101CB1E70450B000CA36F /* ArekPermissionFrequency.swift */,
 				6BB101CC1E70450B000CA36F /* ArekPermissionStatus.swift */,
 				6BB101CD1E70450B000CA36F /* ArekPopupData.swift */,
+				6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -197,6 +226,16 @@
 			path = Location;
 			sourceTree = "<group>";
 		};
+		E30ADEB8810211F0F3C78015 /* arekTests */ = {
+			isa = PBXGroup;
+			children = (
+				E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */,
+				84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */,
+			);
+			name = arekTests;
+			path = arekTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -229,6 +268,24 @@
 			productReference = 6BB101B51E7044BA000CA36F /* arek.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		820742B31632891B4FB3FFD2 /* arekTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CBDC864E4F066C3E07CB52A3 /* Build configuration list for PBXNativeTarget "arekTests" */;
+			buildPhases = (
+				019B1EBD48D057BB96E88443 /* Sources */,
+				BC2429437E7DF764A5237850 /* Frameworks */,
+				7427F10FB2F13634A9A83BCC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5571A9328870FA2699FE5C0B /* PBXTargetDependency */,
+			);
+			name = arekTests;
+			productName = arekTests;
+			productReference = EF9F962770F44DF171EFF5CB /* arekTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -257,6 +314,7 @@
 			projectRoot = "";
 			targets = (
 				6BB101B41E7044BA000CA36F /* arek */,
+				820742B31632891B4FB3FFD2 /* arekTests */,
 			);
 		};
 /* End PBXProject section */
@@ -273,9 +331,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7427F10FB2F13634A9A83BCC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		019B1EBD48D057BB96E88443 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20AFE92E9804F4C2E3117C1F /* ArekConfigurationTests.swift in Sources */,
+				62FADC2A6542D8E3BA1C2AFF /* ArekPopupTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6BB101B01E7044BA000CA36F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -305,12 +379,36 @@
 				B6999B072154994A00E5D92A /* ArekSiri.swift in Sources */,
 				6BB101FB1E70450B000CA36F /* ArekBaseLocation.swift in Sources */,
 				6BB101EE1E70450B000CA36F /* ArekCloudKit.swift in Sources */,
+				2B89620B7B7B80F76E01FFFA /* ArekPopupStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		5571A9328870FA2699FE5C0B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = arek;
+			target = 6BB101B41E7044BA000CA36F /* arek */;
+			targetProxy = 949C2FF6BB13A17F8B84DF48 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		219292877B90480AC3892DB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ennioma.arekTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		6BB101BB1E7044BA000CA36F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -338,7 +436,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Carthage/Build/iOS/**";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -353,7 +450,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -392,7 +489,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Carthage/Build/iOS/**";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -401,7 +497,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -426,7 +522,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ennioma.arek;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -444,9 +540,22 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ennioma.arek;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
+		};
+		ED415C9E4D5ED71B05275903 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = ennioma.arekTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -465,6 +574,15 @@
 			buildConfigurations = (
 				6BB101BE1E7044BA000CA36F /* Debug */,
 				6BB101BF1E7044BA000CA36F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CBDC864E4F066C3E07CB52A3 /* Build configuration list for PBXNativeTarget "arekTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED415C9E4D5ED71B05275903 /* Debug */,
+				219292877B90480AC3892DB2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

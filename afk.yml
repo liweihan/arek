@@ -1,0 +1,22 @@
+# How afk.build proves a change of AREK.
+#
+# The factory's boxes are Linux and have no Xcode, so its gate runs what Linux can: the project/podspec check, and every
+# test of arekTests against AREK's core with a stand-in for UIKit. The iOS framework's build (the permissions too) and
+# the same tests against the real UIKit run on GitHub's macOS machines (.github/workflows/ci.yml), on every push.
+build: sh scripts/xcode.sh build
+workstation:
+  size: m
+  platform: linux
+environment:
+  tools:
+    swift: "6.4.3"
+gate:
+  steps:
+    - name: project
+      tier: fast
+      blocking: true
+      cmd: sh scripts/check-project.sh
+    - name: core
+      tier: fast
+      blocking: true
+      cmd: sh scripts/test-core.sh
