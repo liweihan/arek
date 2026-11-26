@@ -48,13 +48,14 @@ open class ArekReminders: ArekBasePermission, ArekPermissionProtocol {
             // iOS 17 gives reminders full access or none; write-only is the calendar's, and does not let the app read.
             return completion(.denied)
         default:
-            // Full access: .fullAccess since iOS 17, .authorized before (one value under two names).
-            return completion(.authorized)
+            // Full access is one value under two names, .fullAccess since iOS 17 and .authorized before: compared so
+            // that this compiles whichever of them the SDK makes the case. Any other status is one a later SDK added.
+            return completion(status == .authorized ? .authorized : .notDetermined)
         }
     }
     
     open func askForPermission(completion: @escaping ArekPermissionResponse) {
-        EKEventStore().requestAccess(to: .reminder) { granted, error in
+        let answer: EKEventStoreRequestAccessCompletionHandler = { granted, error in
             if let error = error {
                 print("[🚨 Arek 🚨] 🎗 permission error: \(error)")
                 return completion(.notDetermined)
@@ -65,6 +66,12 @@ open class ArekReminders: ArekBasePermission, ArekPermissionProtocol {
             }
             print("[🚨 Arek 🚨] 🎗 permission denied by user ⛔️")
             return completion(.denied)
+        }
+        // From iOS 17, requestAccess(to:) asks nothing of an app built with a current SDK and answers an error.
+        if #available(iOS 17.0, *) {
+            EKEventStore().requestFullAccessToReminders(completion: answer)
+        } else {
+            EKEventStore().requestAccess(to: .reminder, completion: answer)
         }
     }
 }

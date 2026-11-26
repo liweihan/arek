@@ -175,7 +175,7 @@ In the following table there are the configurations for:
 - Allow button title
 - Deny button title
 
-Messages related to the iOS native permission popup should be configured following the conventions described <a href="https://developer.apple.com/library/content/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW1">here</a>.
+Messages related to the iOS native permission popup should be configured following the conventions described <a href="https://developer.apple.com/library/content/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW1">here</a>. From iOS 17 `ArekEvents` and `ArekReminders` ask for full access, whose messages are `NSCalendarsFullAccessUsageDescription` and `NSRemindersFullAccessUsageDescription`.
 
 | Permission      | Pre-permission Title   | Pre-permission Message | Re-Enable Title | Re-Enable Message | Image | Allow Button Title | Deny Button Title |
 | :-------------: | :-------------: | :-------------: | :-------------: | :---------------: | :---: | :----------------: | :---------------: |

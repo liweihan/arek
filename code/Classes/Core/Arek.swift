@@ -60,10 +60,17 @@ open class ArekBasePermission {
     var reEnablePopupData: ArekPopupData = ArekPopupData()
 
     /**
-     Shows one of AREK's alerts and calls `onScreen` once it is on screen. Where there is nothing to show it over
-     (no key window), nothing is shown and `onScreen` is never called. Tests replace it.
+     Shows one of AREK's alerts, called on the main thread, and calls `shown` on the main thread: with true once the
+     alert is on screen, with false where there is nothing to show it over (no key window). Tests replace it.
      */
-    var presentAlert: (_ alert: UIAlertController, _ onScreen: @escaping () -> Void) -> Void = ArekBasePermission.presentOverTopViewController
+    var presentAlert: (_ alert: UIAlertController, _ shown: @escaping (Bool) -> Void) -> Void = ArekBasePermission.presentOverTopViewController
+
+    /**
+     The permissions, by identifier, whose re-enable popup is being presented. A request meanwhile shows nothing, so
+     that two quick requests cannot both pass the frequency's check before the first popup is counted. Read and written
+     on the main thread only.
+     */
+    static var reEnablePopupsPending = Set<String>()
     
     public init(identifier: String) {
         let data = ArekLocalizationManager(permission: identifier)
@@ -118,12 +125,14 @@ open class ArekBasePermission {
                                      allowButtonTitle: String,
                                      denyButtonTitle: String,
                                      completion: @escaping ArekPermissionResponse) {
-        ArekBasePermission.noteNativeOnly(self.initialPopupData)
-        self.presentInitialNativePopup(title: title,
-                                       message: message,
-                                       allowButtonTitle: allowButtonTitle,
-                                       denyButtonTitle: denyButtonTitle,
-                                       completion: completion)
+        ArekBasePermission.onMain {
+            ArekBasePermission.noteNativeOnly(self.initialPopupData)
+            self.presentInitialNativePopup(title: title,
+                                           message: message,
+                                           allowButtonTitle: allowButtonTitle,
+                                           denyButtonTitle: denyButtonTitle,
+                                           completion: completion)
+        }
     }
     
     private func presentInitialNativePopup(title: String,
@@ -147,20 +156,28 @@ open class ArekBasePermission {
         alert.addAction(deny)
         alert.addAction(allow)
         
-        self.presentAlert(alert) {}
+        self.presentAlert(alert) { _ in }
     }
     
     private func presentReEnablePopup() {
         guard let permission = self as? ArekPermissionProtocol else { return }
-        
-        if self.configuration.canPresentReEnablePopup(identifier: permission.identifier) {
-            self.presentReEnablePopup(identifier: permission.identifier,
+        let identifier = permission.identifier
+
+        ArekBasePermission.onMain {
+            if ArekBasePermission.reEnablePopupsPending.contains(identifier) {
+                print("[🚨 Arek 🚨] for \(self) the re-enable popup is being shown already")
+                return
+            }
+            guard self.configuration.canPresentReEnablePopup(identifier: identifier) else {
+                print("[🚨 Arek 🚨] for \(self) present re-enable not allowed")
+                return
+            }
+            ArekBasePermission.reEnablePopupsPending.insert(identifier)
+            self.presentReEnablePopup(identifier: identifier,
                                       title: self.reEnablePopupData.title,
                                       message: self.reEnablePopupData.message,
                                       allowButtonTitle: self.reEnablePopupData.allowButtonTitle,
                                       denyButtonTitle: self.reEnablePopupData.denyButtonTitle)
-        } else {
-            print("[🚨 Arek 🚨] for \(self) present re-enable not allowed")
         }
     }
 
@@ -202,19 +219,32 @@ open class ArekBasePermission {
         
         // The frequency counts from the moment the popup is on screen: one that was never shown is never counted.
         let configuration = self.configuration
-        self.presentAlert(alert) {
-            configuration.reEnablePopupPresented(identifier: identifier)
+        self.presentAlert(alert) { shown in
+            ArekBasePermission.reEnablePopupsPending.remove(identifier)
+            if shown {
+                configuration.reEnablePopupPresented(identifier: identifier)
+            }
         }
     }
 
-    /// Shows `alert` over the key window's top view controller, on the main queue.
-    static func presentOverTopViewController(_ alert: UIAlertController, onScreen: @escaping () -> Void) {
-        DispatchQueue.main.async {
-            guard var topController = UIApplication.shared.keyWindow?.rootViewController else { return }
+    /// Shows `alert` over the key window's top view controller.
+    static func presentOverTopViewController(_ alert: UIAlertController, shown: @escaping (Bool) -> Void) {
+        onMain {
+            guard var topController = UIApplication.shared.keyWindow?.rootViewController else { return shown(false) }
             while let presentedViewController = topController.presentedViewController {
                 topController = presentedViewController
             }
-            topController.present(alert, animated: true, completion: onScreen)
+            topController.present(alert, animated: true) { shown(true) }
+        }
+    }
+
+    /// Runs `body` on the main thread, where UIKit must be used: at once when called there, else from the main queue.
+    /// A permission's status can arrive on any queue (notifications' and CloudKit's do not on the main one).
+    static func onMain(_ body: @escaping () -> Void) {
+        if Thread.isMainThread {
+            body()
+        } else {
+            DispatchQueue.main.async(execute: body)
         }
     }
 

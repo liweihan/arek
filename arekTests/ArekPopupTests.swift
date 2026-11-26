@@ -15,10 +15,17 @@ import XCTest
 final class ArekFakePermission: ArekBasePermission, ArekPermissionProtocol {
     var identifier: String = "ArekFakePermission"
     var currentStatus: ArekPermissionStatus = .notDetermined
+    /// Whether the status arrives on a background queue, as a notification's or CloudKit's does.
+    var answersInTheBackground = false
     var timesAsked = 0
 
     func status(completion: @escaping ArekPermissionResponse) {
-        completion(self.currentStatus)
+        let status = self.currentStatus
+        if self.answersInTheBackground {
+            DispatchQueue.global().async { completion(status) }
+        } else {
+            completion(status)
+        }
     }
 
     func askForPermission(completion: @escaping ArekPermissionResponse) {
@@ -34,6 +41,11 @@ final class ArekPopupTests: XCTestCase {
     private var presented: [UIAlertController] = []
     /// Whether the presenter puts the alert on screen (false: there is no window to show it over).
     private var onScreen = true
+    /// Whether the presenter keeps the alert on its way to the screen: its `shown` waits in `held` for the test.
+    private var hold = false
+    private var held: [(Bool) -> Void] = []
+    /// Called with each alert the presenter is handed, and whether it was handed it on the main thread.
+    private var onPresent: ((UIAlertController, Bool) -> Void)?
 
     override func setUp() {
         super.setUp()
@@ -41,6 +53,10 @@ final class ArekPopupTests: XCTestCase {
         defaults = UserDefaults(suiteName: suiteName)
         presented = []
         onScreen = true
+        hold = false
+        held = []
+        onPresent = nil
+        ArekBasePermission.reEnablePopupsPending = []
     }
 
     override func tearDown() {
@@ -67,8 +83,11 @@ final class ArekPopupTests: XCTestCase {
         permission.currentStatus = status
         permission.presentAlert = { [unowned self] alert, shown in
             self.presented.append(alert)
-            if self.onScreen {
-                shown()
+            self.onPresent?(alert, Thread.isMainThread)
+            if self.hold {
+                self.held.append(shown)
+            } else {
+                shown(self.onScreen)
             }
         }
         return permission
@@ -181,6 +200,56 @@ final class ArekPopupTests: XCTestCase {
         XCTAssertNotNil(lastPresented)
         permission.manage { _ in }
         XCTAssertEqual(presented.count, 2, "tried, shown, then never again")
+    }
+
+    /// Two requests in a row, the second before UIKit has finished presenting the first popup, show one popup.
+    func testARequestWhileTheReEnablePopupIsOnItsWayShowsNothing() {
+        let permission = self.permission(status: .denied, frequency: .JustOnce)
+        hold = true
+        permission.manage { _ in }
+        permission.manage { _ in }
+        XCTAssertEqual(presented.count, 1)
+        XCTAssertNil(lastPresented, "not on screen yet")
+
+        held.removeFirst()(true)
+        XCTAssertNotNil(lastPresented)
+        permission.manage { _ in }
+        XCTAssertEqual(presented.count, 1, "JustOnce shows it once")
+    }
+
+    func testAReEnablePopupThatCouldNotBeShownLetsTheNextRequestTryAgain() {
+        let permission = self.permission(status: .denied, frequency: .JustOnce)
+        hold = true
+        permission.manage { _ in }
+        held.removeFirst()(false)
+        XCTAssertNil(lastPresented)
+
+        permission.manage { _ in }
+        XCTAssertEqual(presented.count, 2)
+    }
+
+    // MARK: - UIKit on the main thread
+
+    func testAStatusFromABackgroundQueueShowsTheInitialPopupOnTheMainThread() {
+        self.assertPopupOnTheMainThread(status: .notDetermined, title: "Initial title")
+    }
+
+    func testAStatusFromABackgroundQueueShowsTheReEnablePopupOnTheMainThread() {
+        self.assertPopupOnTheMainThread(status: .denied, title: "Re-enable title")
+    }
+
+    private func assertPopupOnTheMainThread(status: ArekPermissionStatus, title: String,
+                                            file: StaticString = #file, line: UInt = #line) {
+        let permission = self.permission(status: status)
+        permission.answersInTheBackground = true
+        let presentedOnMain = expectation(description: "the popup is presented")
+        onPresent = { alert, onMainThread in
+            XCTAssertEqual(alert.title, title, file: file, line: line)
+            XCTAssertTrue(onMainThread, "UIKit is used on the main thread only", file: file, line: line)
+            presentedOnMain.fulfill()
+        }
+        permission.manage { _ in }
+        wait(for: [presentedOnMain], timeout: 5)
     }
 
     func testTheInitialPopupIsNotCountedAsAReEnablePopup() {

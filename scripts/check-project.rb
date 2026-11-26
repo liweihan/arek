@@ -46,6 +46,15 @@ check.call("the arekTests target compiles every Swift file of arekTests (#{test_
            (test_sources - test_files).map { |f| "in the arekTests target, not on disk: #{f}" } +
            (test_files.empty? ? ['arekTests holds no test file'] : []))
 
+# Two resources of one name are two commands producing one file of the bundle: Xcode stops the build there ("Multiple
+# commands produce …"). Until 2026-11 the arek target copied code/Assets/.gitkeep and code/Classes/.gitkeep.
+duplicates = project.targets.select { |t| t.respond_to?(:resources_build_phase) }.flat_map do |t|
+  t.resources_build_phase.files_references.compact.group_by { |ref| File.basename(ref.path.to_s) }
+   .select { |_, refs| refs.size > 1 }
+   .map { |name, refs| "#{t.name} copies #{refs.size} files to #{name}: #{refs.map { |r| r.real_path.relative_path_from(Pathname(ROOT)) }.join(', ')}" }
+end
+check.call('no two resources of a target are copied to one name', duplicates)
+
 scheme_path = 'arek.xcodeproj/xcshareddata/xcschemes/arek.xcscheme'
 testables = File.exist?(scheme_path) ? Xcodeproj::XCScheme.new(scheme_path).test_action.testables : []
 tested = testables.reject(&:skipped?).flat_map { |t| t.buildable_references.map(&:target_name) }

@@ -32,8 +32,9 @@ public struct ArekConfiguration {
 
     /// Where the date the re-enable popup was last shown is kept, one entry for each permission's identifier.
     var defaults: UserDefaults = .standard
-    /// The calendar `.OnceADay` counts its days in: the user's own, so a day ends at their midnight.
-    var calendar: Calendar = .current
+    /// The calendar `.OnceADay` counts its days in: the user's own as it is now (a new time zone moves midnight), so a
+    /// day ends at their midnight.
+    var calendar: Calendar = .autoupdatingCurrent
     /// What time it is now; tests set their own.
     var now: () -> Date = { Date() }
 

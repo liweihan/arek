@@ -11,10 +11,8 @@
 		2B89620B7B7B80F76E01FFFA /* ArekPopupStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */; };
 		62FADC2A6542D8E3BA1C2AFF /* ArekPopupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */; };
 		6BB101BA1E7044BA000CA36F /* arek.h in Headers */ = {isa = PBXBuildFile; fileRef = 6BB101B81E7044BA000CA36F /* arek.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6BB101E31E70450B000CA36F /* .gitkeep in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C11E70450B000CA36F /* .gitkeep */; };
 		6BB101E41E70450B000CA36F /* arek.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C21E70450B000CA36F /* arek.png */; };
 		6BB101E51E70450B000CA36F /* arek_contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C31E70450B000CA36F /* arek_contacts.png */; };
-		6BB101E61E70450B000CA36F /* .gitkeep in Resources */ = {isa = PBXBuildFile; fileRef = 6BB101C51E70450B000CA36F /* .gitkeep */; };
 		6BB101E71E70450B000CA36F /* Arek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101C71E70450B000CA36F /* Arek.swift */; };
 		6BB101E81E70450B000CA36F /* ArekConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101C91E70450B000CA36F /* ArekConfiguration.swift */; };
 		6BB101E91E70450B000CA36F /* ArekLocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101CA1E70450B000CA36F /* ArekLocalizationManager.swift */; };
@@ -326,8 +324,6 @@
 			files = (
 				6BB101E51E70450B000CA36F /* arek_contacts.png in Resources */,
 				6BB101E41E70450B000CA36F /* arek.png in Resources */,
-				6BB101E31E70450B000CA36F /* .gitkeep in Resources */,
-				6BB101E61E70450B000CA36F /* .gitkeep in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
