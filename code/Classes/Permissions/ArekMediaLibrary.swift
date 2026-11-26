@@ -47,6 +47,8 @@ open class ArekMediaLibrary: ArekBasePermission, ArekPermissionProtocol {
                 return completion(.denied)
             case .notDetermined:
                 return completion(.notDetermined)
+            @unknown default:
+                return completion(.notDetermined)
             }
         } else {
             return completion(.notAvailable)
@@ -64,6 +66,9 @@ open class ArekMediaLibrary: ArekBasePermission, ArekPermissionProtocol {
                     print("[🚨 Arek 🚨] 💽 permission denied by user ⛔️")
                     return completion(.denied)
                 case .notDetermined:
+                    print("[🚨 Arek 🚨] 💽 permission not determined 🤔")
+                    return completion(.notDetermined)
+                @unknown default:
                     print("[🚨 Arek 🚨] 💽 permission not determined 🤔")
                     return completion(.notDetermined)
                 }

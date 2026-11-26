@@ -40,12 +40,16 @@ open class ArekReminders: ArekBasePermission, ArekPermissionProtocol {
     open func status(completion: @escaping ArekPermissionResponse) {
         let status = EKEventStore.authorizationStatus(for: .reminder)
         switch status {
-        case .authorized:
-            return completion(.authorized)
         case .restricted, .denied:
             return completion(.denied)
         case .notDetermined:
             return completion(.notDetermined)
+        case .writeOnly:
+            // iOS 17 gives reminders full access or none; write-only is the calendar's, and does not let the app read.
+            return completion(.denied)
+        default:
+            // Full access: .fullAccess since iOS 17, .authorized before (one value under two names).
+            return completion(.authorized)
         }
     }
     

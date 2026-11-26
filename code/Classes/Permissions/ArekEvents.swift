@@ -40,12 +40,16 @@ open class ArekEvents: ArekBasePermission, ArekPermissionProtocol {
     open func status(completion: @escaping ArekPermissionResponse) {
             let status = EKEventStore.authorizationStatus(for: .event)
             switch status {
-            case .authorized:
-                return completion(.authorized)
             case .restricted, .denied:
                 return completion(.denied)
             case .notDetermined:
                 return completion(.notDetermined)
+            case .writeOnly:
+                // iOS 17: the app may add events but not read the calendar.
+                return completion(.denied)
+            default:
+                // Full access: .fullAccess since iOS 17, .authorized before (one value under two names).
+                return completion(.authorized)
             }
     }
     

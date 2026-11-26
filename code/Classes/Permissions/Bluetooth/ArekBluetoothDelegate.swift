@@ -66,6 +66,12 @@ open class ArekBluetoothDelegate: NSObject, CBPeripheralManagerDelegate {
                 return completion(.notDetermined)
             }
             break
+        @unknown default:
+            print("[🚨 Arek 🚨] bluetooth could not be determined 🤔")
+            if let completion = self.completion {
+                return completion(.notDetermined)
+            }
+            break
         }
     }
 }

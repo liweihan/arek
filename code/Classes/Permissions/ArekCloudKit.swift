@@ -38,7 +38,7 @@ open class ArekCloudKit: ArekBasePermission, ArekPermissionProtocol {
     }
     
     open func status(completion: @escaping ArekPermissionResponse) {
-        CKContainer.default().status(forApplicationPermission: CKContainer_Application_Permissions.userDiscoverability, completionHandler: { applicationPermissionStatus, error in
+        CKContainer.default().status(forApplicationPermission: .userDiscoverability, completionHandler: { applicationPermissionStatus, error in
             
             if error != nil {
                 return completion(.notDetermined)
@@ -52,6 +52,8 @@ open class ArekCloudKit: ArekBasePermission, ArekPermissionProtocol {
             case .couldNotComplete:
                 return completion(.notDetermined)
             case .initialState:
+                return completion(.notDetermined)
+            @unknown default:
                 return completion(.notDetermined)
             }
         })
@@ -67,7 +69,7 @@ open class ArekCloudKit: ArekBasePermission, ArekPermissionProtocol {
             
             switch accountStatus {
             case .available, .restricted:
-                CKContainer.default().requestApplicationPermission(CKContainer_Application_Permissions.userDiscoverability, completionHandler: { applicationPermissionStatus, error in
+                CKContainer.default().requestApplicationPermission(.userDiscoverability, completionHandler: { applicationPermissionStatus, error in
                     if let error = error {
                         print("[🚨 Arek 🚨] ☁️ discoverability not determined 🤔 error: \(error)")
                         return completion(.notDetermined)
@@ -82,12 +84,17 @@ open class ArekCloudKit: ArekBasePermission, ArekPermissionProtocol {
                         return completion(.authorized)
                     case .couldNotComplete, .initialState:
                         return completion(.notDetermined)
+                    @unknown default:
+                        return completion(.notDetermined)
                     }
                 })
             case .noAccount:
                 print("[🚨 Arek 🚨] ☁️ account not configured ⛔️")
                 return completion(.denied)
-            case .couldNotDetermine:
+            case .couldNotDetermine, .temporarilyUnavailable:
+                print("[🚨 Arek 🚨] ☁️ account not determined 🤔")
+                return completion(.notDetermined)
+            @unknown default:
                 print("[🚨 Arek 🚨] ☁️ account not determined 🤔")
                 return completion(.notDetermined)
             }

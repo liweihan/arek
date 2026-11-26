@@ -43,8 +43,10 @@ open class ArekPhoto: ArekBasePermission, ArekPermissionProtocol {
             return completion(.notDetermined)
         case .restricted, .denied:
             return completion(.denied)
-        case .authorized:
+        case .authorized, .limited:
             return completion(.authorized)
+        @unknown default:
+            return completion(.notDetermined)
         }
     }
         
@@ -57,9 +59,12 @@ open class ArekPhoto: ArekBasePermission, ArekPermissionProtocol {
             case .restricted, .denied:
                 print("[🚨 Arek 🚨] 🌅 permission denied by user ⛔️")
                 return completion(.denied)
-            case.authorized:
+            case .authorized, .limited:
                 print("[🚨 Arek 🚨] 🌅 permission authorized by user ✅")
                 return completion(.authorized)
+            @unknown default:
+                print("[🚨 Arek 🚨] 🌅 permission not determined 🤔")
+                return completion(.notDetermined)
             }
         }
     }
