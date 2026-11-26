@@ -28,7 +28,7 @@ import UIKit
 
 public typealias ArekPermissionResponse = (ArekPermissionStatus) -> Void
 
-public protocol ArekPermissionProtocol: class {
+public protocol ArekPermissionProtocol: AnyObject {
     var identifier: String { get }
     /**
      This is the key method to know if a permission has been authorized or denied.
