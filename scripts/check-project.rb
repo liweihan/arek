@@ -106,26 +106,138 @@ check.call("every switch over an iOS status in code/Classes/Permissions (#{switc
 
 # NSKeyedUnarchiver.unarchiveObject(with:) and NSKeyedArchiver.archivedData(withRootObject:) compile without a word below
 # iOS 12 and, from iOS 12 on, with one warning each, which fails nothing: ArekMotion kept both until 2026-11 and they
-# were the only warnings left in the framework. This reads the code of code/Classes (not its comments, which name the
-# old calls beside what replaced them), so a call that comes back turns the gate red.
+# were the only warnings left in the framework. This reads the code of code/Classes (not its comments and strings, which
+# name the old calls beside what replaced them), so a call that comes back turns the gate red. A Swift call may break its
+# line anywhere between its tokens, so it reads the code as one text, not a line at a time.
 deprecated_archiver = {
   /\bunarchiveObject\s*\(/ => 'NSKeyedUnarchiver.unarchivedObject(ofClass:from:)',
   /\barchiveRootObject\s*\(/ => 'NSKeyedArchiver.archivedData(withRootObject:requiringSecureCoding:)',
   /\bNSKeyedUnarchiver\s*\(\s*forReadingWith\s*:/ => 'NSKeyedUnarchiver(forReadingFrom:)',
   /\bNSKeyedArchiver\s*\(\s*\)/ => 'NSKeyedArchiver(requiringSecureCoding:)'
 }
-archiver_calls = on_disk.flat_map do |file|
-  File.readlines(file).each_with_index.flat_map do |line, index|
-    code = line.sub(%r{//.*}, '')
-    found = deprecated_archiver.select { |pattern, _| code.match?(pattern) }.map { |_, use| "#{file}:#{index + 1}: use #{use}" }
-    # archivedData(withRootObject:) alone is the deprecated one; the one that says requiringSecureCoding: is not.
-    if code.include?('archivedData(withRootObject:') && !code.include?('requiringSecureCoding:')
-      found << "#{file}:#{index + 1}: add requiringSecureCoding: to archivedData(withRootObject:) (on one line)"
+
+# The text of a Swift file with its comments (// and nested /* */) and string literals (" " and """ """) blanked out, the
+# newlines kept: a position in the result is the same position, and line, in the file.
+swift_code = lambda do |text|
+  out = +''
+  i = 0
+  comment_depth = 0
+  blank = ->(char) { char == "\n" ? "\n" : ' ' }
+  while i < text.size
+    two = text[i, 2]
+    if comment_depth.positive?
+      if two == '/*'
+        comment_depth += 1
+        out << '  '
+        i += 2
+      elsif two == '*/'
+        comment_depth -= 1
+        out << '  '
+        i += 2
+      else
+        out << blank.call(text[i])
+        i += 1
+      end
+    elsif two == '//'
+      while i < text.size && text[i] != "\n"
+        out << ' '
+        i += 1
+      end
+    elsif two == '/*'
+      comment_depth = 1
+      out << '  '
+      i += 2
+    elsif text[i, 3] == '"""'
+      out << '   '
+      i += 3
+      until i >= text.size || text[i, 3] == '"""'
+        if text[i] == '\\'
+          out << ' ' << blank.call(text[i + 1].to_s)
+          i += 2
+        else
+          out << blank.call(text[i])
+          i += 1
+        end
+      end
+      out << '   '
+      i += 3
+    elsif text[i] == '"'
+      out << ' '
+      i += 1
+      while i < text.size && text[i] != '"' && text[i] != "\n"
+        if text[i] == '\\'
+          out << ' ' << blank.call(text[i + 1].to_s)
+          i += 2
+        else
+          out << ' '
+          i += 1
+        end
+      end
+      if text[i] == '"'
+        out << ' '
+        i += 1
+      end
+    else
+      out << text[i]
+      i += 1
     end
-    found
   end
+  out
+end
+
+# Every call of the deprecated methods in the code of a Swift file: [line, what to use instead].
+deprecated_archiver_calls = lambda do |text|
+  code = swift_code.call(text)
+  found = []
+  deprecated_archiver.each do |pattern, use|
+    code.scan(pattern) { found << [code[0...Regexp.last_match.begin(0)].count("\n") + 1, "use #{use}"] }
+  end
+  # archivedData(withRootObject:) alone is the deprecated one; the one that names requiringSecureCoding: is not. Its
+  # arguments end at the parenthesis that closes the call.
+  code.scan(/\barchivedData\s*\(\s*withRootObject\s*:/) do
+    match = Regexp.last_match
+    depth = 1
+    i = match.end(0)
+    while depth.positive? && i < code.size
+      depth += 1 if code[i] == '('
+      depth -= 1 if code[i] == ')'
+      i += 1
+    end
+    next if code[match.end(0)...i].match?(/\brequiringSecureCoding\s*:/)
+
+    found << [code[0...match.begin(0)].count("\n") + 1, 'add requiringSecureCoding: to archivedData(withRootObject:)']
+  end
+  found.sort
+end
+
+archiver_calls = on_disk.flat_map do |file|
+  deprecated_archiver_calls.call(File.read(file)).map { |line, use| "#{file}:#{line}: #{use}" }
 end
 check.call("no source of code/Classes (#{on_disk.size}) calls an NSKeyedArchiver or NSKeyedUnarchiver method that iOS 12 deprecated", archiver_calls)
+
+# The check above must see a deprecated call wherever Swift lets it break its line, and must not see one in a comment, a
+# string, or a call that names requiringSecureCoding: on another line than archivedData(.
+flagged = {
+  'on one line' => 'let data = NSKeyedArchiver.archivedData(withRootObject: status.rawValue)',
+  'a line break after archivedData(' => "let data = NSKeyedArchiver.archivedData(\n    withRootObject: status.rawValue\n)",
+  'a line break before the (' => "NSKeyedUnarchiver.unarchiveObject\n    (with: data)",
+  'a line break inside forReadingWith' => "let unarchiver = NSKeyedUnarchiver(\n    forReadingWith: data)",
+  'archiveRootObject' => "NSKeyedArchiver.archiveRootObject(value,\n    toFile: path)",
+  'an archiver made without secure coding' => 'let archiver = NSKeyedArchiver( )',
+  'after a comment that names the secure call' => "/* requiringSecureCoding: */ NSKeyedArchiver.archivedData(withRootObject: x)"
+}
+allowed = {
+  'requiringSecureCoding: on the next line' => "try NSKeyedArchiver.archivedData(withRootObject: x,\n    requiringSecureCoding: true)",
+  'requiringSecureCoding: after a line break after archivedData(' => "try NSKeyedArchiver.archivedData(\n    withRootObject: x,\n    requiringSecureCoding: true\n)",
+  'the replacement of unarchiveObject' => 'try NSKeyedUnarchiver.unarchivedObject(ofClass: NSString.self, from: data)',
+  'the replacement of the initialiser' => 'let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)',
+  'names in comments' => "// NSKeyedUnarchiver.unarchiveObject(with:) was deprecated\n/* a /* nested */ archiveRootObject(x, toFile: f) */",
+  'names in strings' => 'let note = "NSKeyedArchiver.archivedData(withRootObject: x), unarchiveObject(with: d) \" archiveRootObject("',
+  'names in a multi-line string' => "let note = \"\"\"\n  unarchiveObject(with: d)\n  NSKeyedArchiver()\n  \"\"\""
+}
+check.call('the check for deprecated archiver calls sees them across line breaks and not in comments or strings',
+           flagged.reject { |_, source| deprecated_archiver_calls.call(source).any? }.map { |what, _| "does not see: #{what}" } +
+           allowed.select { |_, source| deprecated_archiver_calls.call(source).any? }.map { |what, _| "sees one in: #{what}" })
 
 if failures.empty?
   puts 'project: every check passed'
