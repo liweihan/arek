@@ -197,23 +197,65 @@ Messages related to the iOS native permission popup should be configured followi
 
 <a name="howToInstall"></a>
 # How to install AREK
+This fork has not published a release: its newest tag, `4.0.2`, is [ennioma/arek](https://github.com/ennioma/arek)'s (2018, Swift 4.2), and so is the `arek` pod on CocoaPods trunk. Until it does, point the installer at this repository's `develop` branch (or at one of its commits), as the examples below do.
+
+Whatever you use, **install only the permissions your app asks for**: every permission is its own piece, and the App Store sees every permission API that gets linked into your app. The one that matters most is `ArekHealth`: it links HealthKit, and an app that links HealthKit without using it is rejected.
+
+## Swift Package Manager
+Add the package `https://github.com/liweihan/arek.git` to your project (in Xcode: *File ▸ Add Package Dependencies…*, with the dependency rule *Branch* `develop`), then add the products to your app target: **`ArekCore`** and **one product for each permission you use**.
+
+Or in a `Package.swift` (swift-tools-version 5.3 or later, iOS 12 or later):
+```swift
+dependencies: [
+    .package(url: "https://github.com/liweihan/arek.git", .branch("develop"))
+],
+targets: [
+    .target(name: "MyApp", dependencies: [
+        .product(name: "ArekCore", package: "arek"),
+        .product(name: "ArekCamera", package: "arek")
+    ])
+]
+```
+
+| Product | Permission (class) | iOS framework it links |
+| :------ | :----------------- | :--------------------- |
+| `ArekBluetooth` | `ArekBluetooth` | CoreBluetooth |
+| `ArekCamera` | `ArekCamera` | AVFoundation |
+| `ArekCloudKit` | `ArekCloudKit` | CloudKit |
+| `ArekContacts` | `ArekContacts` | Contacts |
+| `ArekEvents` | `ArekEvents` | EventKit |
+| `ArekHealth` | `ArekHealth` | **HealthKit** |
+| `ArekLocation` | `ArekLocationAlways`, `ArekLocationWhenInUse` | CoreLocation |
+| `ArekMediaLibrary` | `ArekMediaLibrary` | MediaPlayer |
+| `ArekMicrophone` | `ArekMicrophone` | AVFoundation |
+| `ArekMotion` | `ArekMotion` | CoreMotion |
+| `ArekNotifications` | `ArekNotifications` | UserNotifications |
+| `ArekPhotos` | `ArekPhoto` | Photos |
+| `ArekReminders` | `ArekReminders` | EventKit |
+| `ArekSiri` | `ArekSiri` | Intents |
+| `ArekSpeechRecognizer` | `ArekSpeechRecognizer` | Speech |
+
+Each product is a module of its own, and `ArekCore` holds what they share (`ArekConfiguration`, `ArekPopupData`, `ArekPermissionStatus`…): import the permission, and the core where you name its types.
+```swift
+import ArekCore
+import ArekCamera
+
+let camera = ArekCamera(configuration: ArekConfiguration(frequency: .OnceADay,
+                                                         presentInitialPopup: true,
+                                                         presentReEnablePopup: true))
+```
+(With CocoaPods and Carthage AREK is one module, `arek`: `import arek`.)
+
 ## CocoaPods
-Add AREK to your Podfile
-
+The CocoaPods name `arek` is [ennioma/arek](https://github.com/ennioma/arek)'s, so `pod 'arek'` installs upstream's 4.0.2, not this repository. Point the Podfile at this repository, and name the permissions you use (each is a subspec, and `arek/Core` comes with it):
 ```ruby
 use_frameworks!
 target 'MyTarget' do
-    pod 'arek', '~> 2.0.2'
+    pod 'arek/Camera', :git => 'https://github.com/liweihan/arek.git', :branch => 'develop'
+    pod 'arek/Notifications', :git => 'https://github.com/liweihan/arek.git', :branch => 'develop'
 end
 ```
-
-If you want to install just a specific permission, let's say `Bluetooth`, you have to specify:
-```ruby
-use_frameworks!
-target 'MyTarget' do
-    pod 'arek/Bluetooth', '~> 2.0.2'
-end
-```
+The subspecs are `Bluetooth`, `Camera`, `CloudKit`, `Contacts`, `Events`, `Health`, `Location`, `MediaLibrary`, `Microphone`, `Motion`, `Notifications`, `Photos`, `Reminders`, `Siri` and `SpeechRecognizer`. `pod 'arek'` alone installs all of them, `Health` and HealthKit too.
 
 ```bash
 $ pod install
@@ -221,8 +263,10 @@ $ pod install
 
 ## Carthage
 ```ruby
-github "ennioma/arek" ~> 4.0.2
+github "liweihan/arek" "develop"
 ```
+
+Carthage builds one `arek.framework` with **every** permission in it, `ArekHealth` and HealthKit too: if your app does not use HealthKit, install AREK with Swift Package Manager or CocoaPods instead.
 
 Then on your application target *Build Phases* settings tab, add a "New Run Script Phase". Create a Run Script with the following content:
 
@@ -236,23 +280,8 @@ and add the following paths under "Input Files":
 $(SRCROOT)/Carthage/Build/iOS/arek.framework
 ```
 
-## Swift Package Manager
-```ruby
-import PackageDescription
-
-let package = Package(
-  name: "YourApp",
-  dependencies: [
-    .Package(url: "https://github.com/ennioma/arek.git", versionMajor: 2, minor: 0)
-  ]
-)
-```
-
-- Note that if you want to install a *Swift 3* version of Arek, the latest compatible version is the *1.7.0*.
-- If you need to build it on Xcode 10, you have to point to the version `3.0.0`.
-
 ## Add AREK source code to your project
-Add [https://github.com/ennioma/arek/tree/master/arek/arek/Arek](https://github.com/ennioma/arek/tree/master/arek/Classes) folder to your project.
+Copy [`code/Classes/Core`](https://github.com/liweihan/arek/tree/develop/code/Classes/Core) and, from [`code/Classes/Permissions`](https://github.com/liweihan/arek/tree/develop/code/Classes/Permissions), the files of the permissions you use (`ArekCamera.swift`, the `Location` folder…) to your project. The files compile as one module of your app: leave out nothing of the core.
 
 🙏 Take care about adding the ArekHealth class to your project. It includes HealthKit in your project, so if you do this without using HealthKit, your app will be rejected during the AppStore review.
 
@@ -276,7 +305,6 @@ For any information or request feel free to contact me on twitter (@ennioma).
 <a name="todo"></a>
 # TODO
 - [] Provide a way to inject the popup type when the `init()` is called on a permission
-- [] Update the Swift Package Manager installation
 
 <a name="licenseCredits"></a>
 # License and Credits
