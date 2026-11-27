@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		20AFE92E9804F4C2E3117C1F /* ArekConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */; };
+		22D0FFD8FB89565349ABE524 /* ArekArchiveSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDDCDA3EA44FDDC14988BF5 /* ArekArchiveSamples.swift */; };
 		2B89620B7B7B80F76E01FFFA /* ArekPopupStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */; };
 		62FADC2A6542D8E3BA1C2AFF /* ArekPopupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */; };
 		6BB101BA1E7044BA000CA36F /* arek.h in Headers */ = {isa = PBXBuildFile; fileRef = 6BB101B81E7044BA000CA36F /* arek.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -37,6 +38,7 @@
 		6BB101FC1E70450B000CA36F /* ArekBaseLocationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101E01E70450B000CA36F /* ArekBaseLocationDelegate.swift */; };
 		6BB101FD1E70450B000CA36F /* ArekLocationAlways.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101E11E70450B000CA36F /* ArekLocationAlways.swift */; };
 		6BB101FE1E70450B000CA36F /* ArekLocationWhenInUse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB101E21E70450B000CA36F /* ArekLocationWhenInUse.swift */; };
+		77E7FCD12224249E201E83EF /* ArekMotionStatusStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C55E56FD3880F683FD49E9A /* ArekMotionStatusStoreTests.swift */; };
 		A6D6AF5833FFE07285CF5386 /* ArekPermissionStatusArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82D8714AA438FFD444E4475C /* ArekPermissionStatusArchiveTests.swift */; };
 		B6999B072154994A00E5D92A /* ArekSiri.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6999B062154994A00E5D92A /* ArekSiri.swift */; };
 		B8B58FEBC47DED43EDDF7E53 /* arek.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6BB101B51E7044BA000CA36F /* arek.framework */; };
@@ -84,10 +86,12 @@
 		6BB101E01E70450B000CA36F /* ArekBaseLocationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekBaseLocationDelegate.swift; sourceTree = "<group>"; };
 		6BB101E11E70450B000CA36F /* ArekLocationAlways.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekLocationAlways.swift; sourceTree = "<group>"; };
 		6BB101E21E70450B000CA36F /* ArekLocationWhenInUse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekLocationWhenInUse.swift; sourceTree = "<group>"; };
+		6C55E56FD3880F683FD49E9A /* ArekMotionStatusStoreTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekMotionStatusStoreTests.swift; sourceTree = "<group>"; };
 		6EA5BC30E4DF0DA0AC6684C2 /* ArekPopupStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekPopupStyle.swift; sourceTree = "<group>"; };
 		82D8714AA438FFD444E4475C /* ArekPermissionStatusArchiveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekPermissionStatusArchiveTests.swift; sourceTree = "<group>"; };
 		84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekPopupTests.swift; sourceTree = "<group>"; };
 		B6999B062154994A00E5D92A /* ArekSiri.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArekSiri.swift; sourceTree = "<group>"; };
+		CEDDCDA3EA44FDDC14988BF5 /* ArekArchiveSamples.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekArchiveSamples.swift; sourceTree = "<group>"; };
 		E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArekConfigurationTests.swift; sourceTree = "<group>"; };
 		EF9F962770F44DF171EFF5CB /* arekTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = arekTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -232,6 +236,8 @@
 				E76B4D3484969C8CCF06319E /* ArekConfigurationTests.swift */,
 				84397067DB11EEB3DD4681BC /* ArekPopupTests.swift */,
 				82D8714AA438FFD444E4475C /* ArekPermissionStatusArchiveTests.swift */,
+				CEDDCDA3EA44FDDC14988BF5 /* ArekArchiveSamples.swift */,
+				6C55E56FD3880F683FD49E9A /* ArekMotionStatusStoreTests.swift */,
 			);
 			name = arekTests;
 			path = arekTests;
@@ -347,6 +353,8 @@
 				20AFE92E9804F4C2E3117C1F /* ArekConfigurationTests.swift in Sources */,
 				62FADC2A6542D8E3BA1C2AFF /* ArekPopupTests.swift in Sources */,
 				A6D6AF5833FFE07285CF5386 /* ArekPermissionStatusArchiveTests.swift in Sources */,
+				22D0FFD8FB89565349ABE524 /* ArekArchiveSamples.swift in Sources */,
+				77E7FCD12224249E201E83EF /* ArekMotionStatusStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

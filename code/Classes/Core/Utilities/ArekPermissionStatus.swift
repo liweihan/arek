@@ -40,14 +40,17 @@ extension ArekPermissionStatus {
     /// (`NSKeyedArchiver.archivedData(withRootObject: status.rawValue)`), now with secure coding on. A secure archive of
     /// a string is the same bytes as an insecure one, so a status written by this code is still read by an older AREK.
     /// nil when the archive cannot be made.
-    internal var archivedData: Data? {
+    ///
+    /// Public because SwiftPM builds each permission as a module of its own (Package.swift), and a permission that keeps
+    /// its status (ArekMotion) is not in the module of ArekCore.
+    public var archivedData: Data? {
         return try? NSKeyedArchiver.archivedData(withRootObject: rawValue, requiringSecureCoding: true)
     }
 
     /// The status of bytes `archivedData` made, or an older AREK did (`NSKeyedArchiver.archivedData(withRootObject:)`
     /// of the raw value). nil for anything else: no archive, a damaged one, a root of another class, a string that is
     /// no status.
-    internal init?(archivedData data: Data) {
+    public init?(archivedData data: Data) {
         guard let text = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSString.self, from: data),
               let status = ArekPermissionStatus(rawValue: String(text)) else { return nil }
         self = status

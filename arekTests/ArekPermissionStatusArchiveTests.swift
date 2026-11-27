@@ -2,9 +2,11 @@
 //  ArekPermissionStatusArchiveTests.swift
 //  arekTests
 //
-//  What ArekMotion keeps in UserDefaults (ennioma.arek.motion.requested): a status read from what an older AREK wrote
-//  (NSKeyedArchiver.archivedData(withRootObject:), deprecated since iOS 12), a status written now, and whatever else
-//  that key may hold. Foundation only: scripts/test-core.sh runs this file with SwiftPM on Linux too.
+//  The bytes ArekMotion keeps in UserDefaults for a status: the ones an older AREK wrote with
+//  `NSKeyedArchiver.archivedData(withRootObject:)` (deprecated since iOS 12; ArekArchiveSamples holds what that call
+//  returned on Apple's Foundation) are still read, what is written now is read back, and whatever else may be there is no
+//  status. ArekMotionStatusStoreTests does the same through ArekMotion itself. Foundation only: scripts/test-core.sh runs
+//  this file with SwiftPM on Linux too.
 //
 
 import Foundation
@@ -14,14 +16,6 @@ import XCTest
 final class ArekPermissionStatusArchiveTests: XCTestCase {
     private let everyStatus: [ArekPermissionStatus] = [.authorized, .denied, .notDetermined, .notAvailable]
 
-    // MARK: - Helpers
-
-    /// What an older AREK wrote for a status: a keyed archive of its raw value, without secure coding, which is what
-    /// `NSKeyedArchiver.archivedData(withRootObject:)` made.
-    private func writtenByOlderArek(_ status: ArekPermissionStatus) throws -> Data {
-        return try NSKeyedArchiver.archivedData(withRootObject: status.rawValue, requiringSecureCoding: false)
-    }
-
     /// What an older AREK does with the bytes: `NSKeyedUnarchiver.unarchiveObject(with:)`, which takes any class.
     private func readByOlderArek(_ data: Data) throws -> String? {
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
@@ -30,34 +24,21 @@ final class ArekPermissionStatusArchiveTests: XCTestCase {
         return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? String
     }
 
-    /// An archive (the layout of the ones an older AREK stored on a phone: $archiver, $objects with $null and the
-    /// string, $top.root, $version 100000), made by plistlib, with that string as its root. Frozen, so that a change
-    /// of what NSKeyedArchiver writes cannot change what these tests read.
-    private func archive(base64: String) throws -> Data {
-        return try XCTUnwrap(Data(base64Encoded: base64))
-    }
-
-    private let olderAuthorized = "YnBsaXN0MDDUAQIDBAUGCQxZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKiBwhVJG51bGxaYXV0aG9yaXplZNEKC1Ryb290gAESAAGGoAgRGyQpMkRHTVhbYGIAAAAAAAABAQAAAAAAAAANAAAAAAAAAAAAAAAAAAAAZw=="
-    private let olderDenied = "YnBsaXN0MDDUAQIDBAUGCQxZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKiBwhVJG51bGxWZGVuaWVk0QoLVHJvb3SAARIAAYagCBEbJCkyREdNVFdcXgAAAAAAAAEBAAAAAAAAAA0AAAAAAAAAAAAAAAAAAABj"
-    private let olderNotDetermined = "YnBsaXN0MDDUAQIDBAUGCQxZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKiBwhVJG51bGxdbm90RGV0ZXJtaW5lZNEKC1Ryb290gAESAAGGoAgRGyQpMkRHTVteY2UAAAAAAAABAQAAAAAAAAANAAAAAAAAAAAAAAAAAAAAag=="
-    private let olderNotAvailable = "YnBsaXN0MDDUAQIDBAUGCQxZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKiBwhVJG51bGxcbm90QXZhaWxhYmxl0QoLVHJvb3SAARIAAYagCBEbJCkyREdNWl1iZAAAAAAAAAEBAAAAAAAAAA0AAAAAAAAAAAAAAAAAAABp"
-    /// The same layout with the number 1 as its root.
-    private let olderNumber = "YnBsaXN0MDDUAQIDBAUGCQxZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKiBwhVJG51bGwQAdEKC1Ryb290gAESAAGGoAgRGyQpMkRHTU9SV1kAAAAAAAABAQAAAAAAAAANAAAAAAAAAAAAAAAAAAAAXg=="
-
     // MARK: - What an older AREK stored is still read
 
-    func testReadsEveryStatusAnOlderArekWrote() throws {
-        for status in everyStatus {
-            let data = try writtenByOlderArek(status)
+    /// Each status on its own, so that a read that falls back to `.notDetermined` cannot pass for `.notDetermined`.
+    func testReadsTheArchivesTheDeprecatedCallWrote() {
+        XCTAssertEqual(ArekArchiveSamples.writtenByOlderArek.map { $0.status }, everyStatus)
+        for (status, data) in ArekArchiveSamples.writtenByOlderArek {
             XCTAssertEqual(ArekPermissionStatus(archivedData: data), status, "\(status)")
         }
     }
 
-    func testReadsTheFrozenArchivesOfAnOlderArek() throws {
-        XCTAssertEqual(ArekPermissionStatus(archivedData: try archive(base64: olderAuthorized)), .authorized)
-        XCTAssertEqual(ArekPermissionStatus(archivedData: try archive(base64: olderDenied)), .denied)
-        XCTAssertEqual(ArekPermissionStatus(archivedData: try archive(base64: olderNotDetermined)), .notDetermined)
-        XCTAssertEqual(ArekPermissionStatus(archivedData: try archive(base64: olderNotAvailable)), .notAvailable)
+    /// The reader reads the old archives as the older AREK itself did.
+    func testTheSamplesAreWhatAnOlderArekReadsAsTheStatus() throws {
+        for (status, data) in ArekArchiveSamples.writtenByOlderArek {
+            XCTAssertEqual(try readByOlderArek(data), status.rawValue, "\(status)")
+        }
     }
 
     // MARK: - What is written now round-trips, and an older AREK reads it too
@@ -76,18 +57,16 @@ final class ArekPermissionStatusArchiveTests: XCTestCase {
         }
     }
 
-    func testRoundTripsThroughUserDefaultsUnderTheKeyOfAnOlderArek() throws {
-        let suiteName = "arekTests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-        let key = "ennioma.arek.motion.requested"
-
-        defaults.set(try writtenByOlderArek(.denied), forKey: key)
-        XCTAssertEqual(defaults.data(forKey: key).flatMap { ArekPermissionStatus(archivedData: $0) }, .denied)
-
-        defaults.set(try XCTUnwrap(ArekPermissionStatus.authorized.archivedData), forKey: key)
-        XCTAssertEqual(defaults.data(forKey: key).flatMap { ArekPermissionStatus(archivedData: $0) }, .authorized)
+    #if !os(Linux)
+    /// On Apple's Foundation the secure archive of a string is the same bytes as the one the deprecated call made, so an
+    /// older AREK reads what is written now and the data does not change shape. (swift-corelibs-foundation, on Linux, lays
+    /// an archive out in its own order: only what the two readers make of an archive can be compared there.)
+    func testWhatIsWrittenNowIsByteForByteWhatTheDeprecatedCallWrote() throws {
+        for (status, data) in ArekArchiveSamples.writtenByOlderArek {
+            XCTAssertEqual(status.archivedData, data, "\(status)")
+        }
     }
+    #endif
 
     // MARK: - Anything else on the key is no status
 
@@ -100,9 +79,10 @@ final class ArekPermissionStatusArchiveTests: XCTestCase {
         XCTAssertNil(ArekPermissionStatus(archivedData: Data([0x00, 0xFF, 0x10, 0x42, 0x7F])))
     }
 
-    func testACutShortArchiveIsNoStatus() throws {
-        let data = try XCTUnwrap(ArekPermissionStatus.authorized.archivedData)
-        XCTAssertNil(ArekPermissionStatus(archivedData: data.prefix(data.count / 2)))
+    func testACutShortArchiveIsNoStatus() {
+        for (status, data) in ArekArchiveSamples.writtenByOlderArek {
+            XCTAssertNil(ArekPermissionStatus(archivedData: data.prefix(data.count / 2)), "\(status)")
+        }
     }
 
     func testAPropertyListThatIsNoArchiveIsNoStatus() throws {
@@ -118,7 +98,7 @@ final class ArekPermissionStatusArchiveTests: XCTestCase {
     }
 
     func testAnArchiveWhoseRootIsNotAStringIsNoStatus() throws {
-        XCTAssertNil(ArekPermissionStatus(archivedData: try archive(base64: olderNumber)))
+        XCTAssertNil(ArekPermissionStatus(archivedData: ArekArchiveSamples.aNumber))
         let number = try NSKeyedArchiver.archivedData(withRootObject: NSNumber(value: 1), requiringSecureCoding: true)
         XCTAssertNil(ArekPermissionStatus(archivedData: number))
     }

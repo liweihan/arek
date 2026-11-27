@@ -36,7 +36,9 @@ open class ArekMotion: ArekBasePermission, ArekPermissionProtocol {
     private let userKey = "ennioma.arek.motion.requested"
     private let motionManager = CMMotionActivityManager()
     
-    private var motionRequested: ArekPermissionStatus {
+    /// What AREK kept of the answer to its last request, under `userKey`, across launches. Not private so that arekTests
+    /// reach the key and the fallbacks through it.
+    var motionRequested: ArekPermissionStatus {
         get {
             if let data = UserDefaults.standard.data(forKey: userKey),
                let permission = ArekPermissionStatus(archivedData: data) {
