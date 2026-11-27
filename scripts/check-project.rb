@@ -1,5 +1,5 @@
-# Checks, without Xcode (Linux or a Mac), that the two ways AREK is installed build the same thing and that a newer
-# iOS SDK cannot break its switches over iOS's statuses.
+# Checks, without Xcode (Linux or a Mac), that the two ways AREK is installed build the same thing, that a newer
+# iOS SDK cannot break its switches over iOS's statuses and that no source calls the archiver methods iOS 12 deprecated.
 # Carthage builds arek.xcodeproj, CocoaPods builds arek.podspec's globs of code/Classes. Until 2026-11 they had drifted:
 # ArekPopupStyle.swift was in the pod and missing from the project (whose target could then not compile), the project
 # said Swift 3.0 / iOS 9.0 and the podspec Swift 4.2 / iOS 10.0, and the shared scheme tested nothing.
@@ -103,6 +103,29 @@ end
 check.call("every switch over an iOS status in code/Classes/Permissions (#{switches.size}) has an @unknown default",
            switches.reject { |_, _, body| body.match?(/(^|\s)(@unknown\s+)?default\s*:/) }
                    .map { |file, line, _| "no default: #{file}:#{line}" })
+
+# NSKeyedUnarchiver.unarchiveObject(with:) and NSKeyedArchiver.archivedData(withRootObject:) compile without a word below
+# iOS 12 and, from iOS 12 on, with one warning each, which fails nothing: ArekMotion kept both until 2026-11 and they
+# were the only warnings left in the framework. This reads the code of code/Classes (not its comments, which name the
+# old calls beside what replaced them), so a call that comes back turns the gate red.
+deprecated_archiver = {
+  /\bunarchiveObject\s*\(/ => 'NSKeyedUnarchiver.unarchivedObject(ofClass:from:)',
+  /\barchiveRootObject\s*\(/ => 'NSKeyedArchiver.archivedData(withRootObject:requiringSecureCoding:)',
+  /\bNSKeyedUnarchiver\s*\(\s*forReadingWith\s*:/ => 'NSKeyedUnarchiver(forReadingFrom:)',
+  /\bNSKeyedArchiver\s*\(\s*\)/ => 'NSKeyedArchiver(requiringSecureCoding:)'
+}
+archiver_calls = on_disk.flat_map do |file|
+  File.readlines(file).each_with_index.flat_map do |line, index|
+    code = line.sub(%r{//.*}, '')
+    found = deprecated_archiver.select { |pattern, _| code.match?(pattern) }.map { |_, use| "#{file}:#{index + 1}: use #{use}" }
+    # archivedData(withRootObject:) alone is the deprecated one; the one that says requiringSecureCoding: is not.
+    if code.include?('archivedData(withRootObject:') && !code.include?('requiringSecureCoding:')
+      found << "#{file}:#{index + 1}: add requiringSecureCoding: to archivedData(withRootObject:) (on one line)"
+    end
+    found
+  end
+end
+check.call("no source of code/Classes (#{on_disk.size}) calls an NSKeyedArchiver or NSKeyedUnarchiver method that iOS 12 deprecated", archiver_calls)
 
 if failures.empty?
   puts 'project: every check passed'
