@@ -38,9 +38,8 @@ open class ArekMotion: ArekBasePermission, ArekPermissionProtocol {
     
     private var motionRequested: ArekPermissionStatus {
         get {
-            if let data = UserDefaults.standard.value(forKey: userKey) as? Data,
-               let value = NSKeyedUnarchiver.unarchiveObject(with: data) as? String,
-               let permission = ArekPermissionStatus(rawValue: value) {
+            if let data = UserDefaults.standard.data(forKey: userKey),
+               let permission = ArekPermissionStatus(archivedData: data) {
                 
                 return permission
             }
@@ -48,7 +47,9 @@ open class ArekMotion: ArekBasePermission, ArekPermissionProtocol {
             return .notDetermined
         }
         set {
-            UserDefaults.standard.set(NSKeyedArchiver.archivedData(withRootObject: newValue.rawValue), forKey: userKey)
+            if let data = newValue.archivedData {
+                UserDefaults.standard.set(data, forKey: userKey)
+            }
             UserDefaults.standard.synchronize()
         }
     }
