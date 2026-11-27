@@ -24,6 +24,10 @@
 //
 import Foundation
 import Intents
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 @available(iOS 10.0, *)
 open class ArekSiri: ArekBasePermission, ArekPermissionProtocol {

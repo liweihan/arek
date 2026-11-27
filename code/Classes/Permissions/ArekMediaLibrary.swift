@@ -25,6 +25,10 @@
 
 import Foundation
 import MediaPlayer
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekMediaLibrary: ArekBasePermission, ArekPermissionProtocol {
     open var identifier: String = "ArekMediaLibrary"

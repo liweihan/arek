@@ -25,6 +25,10 @@
 
 import Foundation
 import AVFoundation
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekMicrophone: ArekBasePermission, ArekPermissionProtocol {
     public var identifier: String = "ArekMicrophone"

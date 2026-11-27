@@ -23,6 +23,10 @@
 
 import Foundation
 import CoreBluetooth
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekBluetooth: ArekBasePermission, ArekPermissionProtocol {
     open var identifier: String = "ArekBluetooth"

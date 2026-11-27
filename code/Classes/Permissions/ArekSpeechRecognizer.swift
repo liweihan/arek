@@ -25,6 +25,10 @@
 
 import Foundation
 import Speech
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekSpeechRecognizer: ArekBasePermission, ArekPermissionProtocol {
     open var identifier: String = "ArekSpeechRecognizer"

@@ -25,6 +25,10 @@
 
 import Foundation
 import CoreMotion
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekMotion: ArekBasePermission, ArekPermissionProtocol {
     open var identifier: String = "ArekMotion"

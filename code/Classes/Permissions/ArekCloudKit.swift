@@ -25,6 +25,10 @@
 
 import UIKit
 import CloudKit
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekCloudKit: ArekBasePermission, ArekPermissionProtocol {
     open var identifier = "ArekCloudKit"

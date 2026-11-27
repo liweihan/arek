@@ -2,10 +2,10 @@ Pod::Spec.new do |s|
   s.name             = 'arek'
   s.version          = '4.0.2'
   s.summary          = 'AREK is a clean and easy to use wrapper over any kind of iOS permission.'
-  s.homepage         = 'https://github.com/ennioma/arek'
+  s.homepage         = 'https://github.com/liweihan/arek'
   s.license          = { :type => 'MIT', :file => 'LICENSE'}
   s.author           = { 'Ennio Masi' => 'ennio.masi@gmail.com' }
-  s.source           = { :git => 'https://github.com/ennioma/arek.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/liweihan/arek.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/ennioma'
   s.ios.deployment_target = '12.0'
   s.swift_version    = '5.0'
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   s.subspec 'Contacts' do |ss|
     ss.dependency 'arek/Core'
     ss.source_files = 'code/Classes/Permissions/ArekContacts.swift'
-    ss.frameworks = 'AddressBook'
+    ss.frameworks = 'Contacts'
   end
 
   s.subspec 'Events' do |ss|
@@ -79,18 +79,25 @@ Pod::Spec.new do |s|
   s.subspec 'Notifications' do |ss|
     ss.dependency 'arek/Core'
     ss.source_files = 'code/Classes/Permissions/ArekNotifications.swift'
+    ss.frameworks = 'UserNotifications'
   end
 
   s.subspec 'Photos' do |ss|
     ss.dependency 'arek/Core'
     ss.source_files = 'code/Classes/Permissions/ArekPhoto.swift'
-    ss.frameworks = 'AssetsLibrary'
+    ss.frameworks = 'Photos'
   end
 
   s.subspec 'Reminders' do |ss|
     ss.dependency 'arek/Core'
     ss.source_files = 'code/Classes/Permissions/ArekReminders.swift'
     ss.frameworks = 'EventKit'
+  end
+
+  s.subspec 'Siri' do |ss|
+    ss.dependency 'arek/Core'
+    ss.source_files = 'code/Classes/Permissions/ArekSiri.swift'
+    ss.frameworks = 'Intents'
   end
 
   s.subspec 'SpeechRecognizer' do |ss|

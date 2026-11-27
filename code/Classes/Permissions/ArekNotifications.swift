@@ -27,6 +27,10 @@ import Foundation
 
 import UIKit
 import UserNotifications
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 open class ArekNotifications: ArekBasePermission, ArekPermissionProtocol {
     open var wantedNotificationTypes: Any?

@@ -25,6 +25,10 @@
 
 import Foundation
 import CoreLocation
+// SwiftPM builds ArekCore as a module of its own; CocoaPods and arek.xcodeproj build AREK as one module.
+#if canImport(ArekCore)
+import ArekCore
+#endif
 
 public class ArekBaseLocationDelegate: NSObject, CLLocationManagerDelegate {
     var locationManager: CLLocationManager = CLLocationManager()
