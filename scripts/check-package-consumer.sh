@@ -29,10 +29,12 @@ ln -s "$root" "$work/arek"
 # consumer <name> <ArekCore + one permission product> <swift source>: builds it and prints the names of the frameworks
 # that what it built links (Foundation, AVFoundation, ...), one on a line.
 #
-# What an app that adds the consumer links is what every binary of the build links together: SwiftPM may build a
-# permission's product into the consumer's own binary (a static library) or as a framework of its own (a dynamic one,
-# in PackageFrameworks), and the iOS frameworks it imports are then on whichever binary holds it. So this reads every
-# framework and dynamic library the build made (Build/Products), not one place that depends on that choice.
+# What an app that adds the consumer links is what the consumer's own binary links and, from it, what the binaries it
+# loads link: SwiftPM may build a permission's product into the consumer's binary (a static library) or as a framework
+# of its own (a dynamic one, in PackageFrameworks, which the consumer names by an @rpath), and the iOS frameworks it
+# imports are then on whichever binary holds it. So this starts at the consumer's binary and follows its @rpath
+# dependencies to the binaries the build made, and reads no other binary of the build: one the consumer does not load
+# (a helper the build made on the way) says nothing of what an app links.
 linked_frameworks() {
     name=$1
     product=$2
@@ -76,26 +78,66 @@ PACKAGE
         exit 1
     }
 
-    # Every binary the build made: the frameworks' (<X>.framework/<X>) and the dynamic libraries'.
-    binaries="$work/binaries-$name.txt"
-    {
-        find "$products" -type d -name '*.framework' | while read -r framework; do
-            binary="$framework/$(basename "$framework" .framework)"
-            if [ -f "$binary" ]; then echo "$binary"; fi
-        done
-        find "$products" -type f -name '*.dylib' || true
-    } > "$binaries"
-    if ! grep -q -e "/$name.framework/$name\$" -e "/lib$name.dylib\$" "$binaries"; then
+    # The consumer's binary: its framework, or its dynamic library.
+    start=$(find "$products" \( -path "*/$name.framework/$name" -o -name "lib$name.dylib" \) -type f | head -1)
+    if [ -z "$start" ]; then
         echo "check-package-consumer: the build of $name made no $name.framework (nor lib$name.dylib); what it made:" >&2
         find "$products" -maxdepth 5 >&2 || true
         exit 1
     fi
 
     # `otool -L` prints the binary's own name first and, for a binary of several architectures, a heading for each; the
-    # frameworks it links are on the lines that begin with a tab.
-    while read -r binary; do
-        otool -L "$binary" | grep "^[[:space:]]" | awk '{ print $1 }'
-    done < "$binaries" | sed -n 's#.*/\([A-Za-z0-9_]*\)\.framework/.*#\1#p' | sort -u
+    # libraries it loads are on the lines that begin with a tab. A binary it cannot read, or that loads nothing, fails
+    # the check (a failure of otool must not read as "links no HealthKit"): the status of otool itself is read, not the
+    # status of a pipeline that ends in a filter.
+    pending="$work/pending-$name.txt"
+    seen="$work/seen-$name.txt"
+    linked="$work/linked-$name.txt"
+    dependencies="$work/dependencies-$name.txt"
+    echo "$start" > "$pending"
+    : > "$seen"
+    : > "$linked"
+    while [ -s "$pending" ]; do
+        binary=$(head -1 "$pending")
+        sed 1d "$pending" > "$pending.rest"
+        mv "$pending.rest" "$pending"
+        if grep -qxF "$binary" "$seen"; then continue; fi
+        echo "$binary" >> "$seen"
+
+        if ! listing=$(otool -L "$binary" 2>&1); then
+            echo "check-package-consumer: otool -L failed on $binary:" >&2
+            echo "$listing" >&2
+            exit 1
+        fi
+        echo "$listing" | grep "^[[:space:]]" | awk '{ print $1 }' > "$dependencies" || true
+        if [ ! -s "$dependencies" ]; then
+            echo "check-package-consumer: otool -L printed no library for $binary:" >&2
+            echo "$listing" >&2
+            exit 1
+        fi
+
+        while read -r dependency; do
+            echo "$dependency" >> "$linked"
+            case "$dependency" in
+            @rpath/*.framework/*) found=$(find "$products" -path "*/${dependency#@rpath/}" -type f | head -1) ;;
+            @rpath/*.dylib) found=$(find "$products" -name "${dependency##*/}" -type f | head -1) ;;
+            *) found= ;;
+            esac
+            if [ -n "$found" ]; then
+                echo "$found" >> "$pending"
+            else
+                case "$dependency" in
+                @rpath/Arek*)
+                    echo "check-package-consumer: $binary loads $dependency, which the build of $name did not make; what it made:" >&2
+                    find "$products" -maxdepth 5 >&2 || true
+                    exit 1
+                    ;;
+                esac
+            fi
+        done < "$dependencies"
+    done
+
+    sed -n 's#.*/\([A-Za-z0-9_]*\)\.framework/.*#\1#p' "$linked" | sort -u
 }
 
 camera=$(linked_frameworks CameraConsumer ArekCamera '
