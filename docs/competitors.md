@@ -18,10 +18,20 @@ Hacker News (search by name, stories): nothing about any of these in the last ye
 
 ## What the market has that arek lacks
 
-- A SwiftPM manifest with one product per permission (arek's `Package.swift` is empty).
-- Statuses newer than iOS 10: limited photo access, provisional and ephemeral notifications,
-  App Tracking Transparency.
-- Completions delivered on the main actor.
+Read against `develop` on 2026-11-27.
+
+- A SwiftPM manifest with one product per permission (arek's `Package.swift` is still empty).
+- App Tracking Transparency: PermissionsKit has a Tracking permission, arek has no request for it.
+  (FaceID is the other permission PermissionsKit lists that arek does not.)
+- A way to tell the newer states apart. arek already handles them, so this is not a missing case:
+  photo `.limited` maps to `.authorized`, notification `.provisional` to `.notDetermined` and
+  `.ephemeral` to `.authorized`. The gap is that `ArekPermissionStatus` has only four values
+  (`authorized`, `denied`, `notDetermined`, `notAvailable`), so a caller cannot see "limited" or
+  "provisional" at all. PermissionsKit documents only three public statuses (`.authorized`, `.denied`,
+  `.notDetermined`), so it does not offer more here either.
+- Completions on a known queue. arek shows its popups on the main thread, but a permission's status
+  can still arrive on any queue (notifications and CloudKit do not use the main one);
+  PermissionsKit 12 makes its completions `@MainActor`.
 
 ## What arek has that they lack
 
