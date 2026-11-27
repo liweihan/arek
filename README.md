@@ -246,6 +246,8 @@ let camera = ArekCamera(configuration: ArekConfiguration(frequency: .OnceADay,
 ```
 (With CocoaPods and Carthage AREK is one module, `arek`: `import arek`.)
 
+AREK is for iOS: `swift build` on a Mac builds for macOS, which has no UIKit, and fails. Build the products for an iOS destination, from Xcode.
+
 ## CocoaPods
 The CocoaPods name `arek` is [ennioma/arek](https://github.com/ennioma/arek)'s, so `pod 'arek'` installs upstream's 4.0.2, not this repository. Point the Podfile at this repository, and name the permissions you use (each is a subspec, and `arek/Core` comes with it):
 ```ruby
