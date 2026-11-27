@@ -1,7 +1,10 @@
-// A stand-in for the few UIKit types AREK's core (code/Classes/Core) uses, so that scripts/test-core.sh can compile the
-// core and run every test of arekTests on Linux, where there is no UIKit. It mimics only what the core and the tests
-// touch: an alert is never shown, `present` calls its completion at once. The real UIKit is what
-// scripts/xcode.sh test runs the same tests against, on a Mac (.github/workflows/ci.yml).
+// A stand-in for the few UIKit types AREK's core (code/Classes/Core) uses, so that the core compiles on Linux, where there
+// is no UIKit. It mimics only what the core and its tests touch: an alert is never shown, `present` calls its completion
+// at once. Two scripts compile against it, and the real UIKit is what the Mac checks use:
+//   - scripts/test-core.sh runs every test of arekTests against it (scripts/xcode.sh test runs the same tests against the
+//     real UIKit in an iPhone simulator, .github/workflows/ci.yml);
+//   - scripts/check-package.sh compiles ArekCore with it and type-checks each permission against that module
+//     (scripts/check-package-consumer.sh builds the products against the real UIKit, for the iOS simulator).
 @_exported import Foundation
 
 open class UIColor {}

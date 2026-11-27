@@ -26,13 +26,20 @@ trap 'rm -rf "$work"' EXIT
 # The package is named after its directory by SwiftPM: "arek", whatever the checkout is called.
 ln -s "$root" "$work/arek"
 
-# consumer <name> <ArekCore + one permission product> <swift source>: builds it and prints the frameworks it links.
+# consumer <name> <ArekCore + one permission product> <swift source>: builds it and prints the names of the frameworks
+# that what it built links (Foundation, AVFoundation, ...), one on a line.
+#
+# What an app that adds the consumer links is what every binary of the build links together: SwiftPM may build a
+# permission's product into the consumer's own binary (a static library) or as a framework of its own (a dynamic one,
+# in PackageFrameworks), and the iOS frameworks it imports are then on whichever binary holds it. So this reads every
+# framework and dynamic library the build made (Build/Products), not one place that depends on that choice.
 linked_frameworks() {
     name=$1
     product=$2
     source=$3
 
     dir="$work/$name"
+    products="$work/derived-$name/Build/Products"
     mkdir -p "$dir/Sources/$name"
     cat > "$dir/Package.swift" <<PACKAGE
 // swift-tools-version:5.5
@@ -53,22 +60,42 @@ let package = Package(
 PACKAGE
     printf '%s\n' "$source" > "$dir/Sources/$name/$name.swift"
 
+    log="$work/build-$name.log"
     (
         cd "$dir"
         xcodebuild -scheme "$name" -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$work/derived-$name" CODE_SIGNING_ALLOWED=NO build > "$work/build-$name.log" 2>&1
+            -derivedDataPath "$work/derived-$name" CODE_SIGNING_ALLOWED=NO build > "$log" 2>&1
     ) || {
-        echo "check-package-consumer: $name does not build (an excerpt; the build log is removed with the temporary directory):" >&2
-        grep -E "error:" "$work/build-$name.log" | head -20 >&2 || tail -20 "$work/build-$name.log" >&2
+        # The build log is removed with the temporary directory: what a failed run leaves to read is printed here.
+        echo "check-package-consumer: $name does not build. The errors of xcodebuild, and the end of its log:" >&2
+        grep -E "error:" "$log" | head -20 >&2 || true
+        echo "---" >&2
+        tail -20 "$log" >&2
+        echo "--- the schemes xcodebuild finds in the consumer's package:" >&2
+        (cd "$dir" && xcodebuild -list 2>&1 | head -40) >&2 || true
         exit 1
     }
 
-    binary=$(find "$work/derived-$name/Build/Products" -path "*/$name.framework/$name" -type f | head -1)
-    if [ -z "$binary" ]; then
-        echo "check-package-consumer: the build of $name made no $name.framework" >&2
+    # Every binary the build made: the frameworks' (<X>.framework/<X>) and the dynamic libraries'.
+    binaries="$work/binaries-$name.txt"
+    {
+        find "$products" -type d -name '*.framework' | while read -r framework; do
+            binary="$framework/$(basename "$framework" .framework)"
+            if [ -f "$binary" ]; then echo "$binary"; fi
+        done
+        find "$products" -type f -name '*.dylib' || true
+    } > "$binaries"
+    if ! grep -q -e "/$name.framework/$name\$" -e "/lib$name.dylib\$" "$binaries"; then
+        echo "check-package-consumer: the build of $name made no $name.framework (nor lib$name.dylib); what it made:" >&2
+        find "$products" -maxdepth 5 >&2 || true
         exit 1
     fi
-    otool -L "$binary" | sed 1d | awk '{ print $1 }'
+
+    # `otool -L` prints the binary's own name first and, for a binary of several architectures, a heading for each; the
+    # frameworks it links are on the lines that begin with a tab.
+    while read -r binary; do
+        otool -L "$binary" | grep "^[[:space:]]" | awk '{ print $1 }'
+    done < "$binaries" | sed -n 's#.*/\([A-Za-z0-9_]*\)\.framework/.*#\1#p' | sort -u
 }
 
 camera=$(linked_frameworks CameraConsumer ArekCamera '
@@ -92,19 +119,19 @@ public func healthPermission() -> ArekHealth {
 ')
 
 status=0
-if ! echo "$camera" | grep -q "AVFoundation.framework"; then
-    echo "check-package-consumer: a consumer of ArekCamera does not link AVFoundation; what it links:" >&2
-    echo "$camera" >&2
+links() { echo "$1" | grep -qx "$2"; }
+echo "check-package-consumer: CameraConsumer (ArekCore + ArekCamera) links: $(echo "$camera" | tr '\n' ' ')"
+echo "check-package-consumer: HealthConsumer (ArekCore + ArekHealth) links: $(echo "$health" | tr '\n' ' ')"
+if ! links "$camera" AVFoundation; then
+    echo "check-package-consumer: a consumer of ArekCamera does not link AVFoundation" >&2
     status=1
 fi
-if echo "$camera" | grep -q "HealthKit.framework"; then
-    echo "check-package-consumer: a consumer of ArekCamera links HealthKit; what it links:" >&2
-    echo "$camera" >&2
+if links "$camera" HealthKit; then
+    echo "check-package-consumer: a consumer of ArekCamera links HealthKit" >&2
     status=1
 fi
-if ! echo "$health" | grep -q "HealthKit.framework"; then
-    echo "check-package-consumer: a consumer of ArekHealth does not link HealthKit, so this check cannot tell; what it links:" >&2
-    echo "$health" >&2
+if ! links "$health" HealthKit; then
+    echo "check-package-consumer: a consumer of ArekHealth does not link HealthKit, so this check cannot tell" >&2
     status=1
 fi
 

@@ -299,10 +299,12 @@ For any information or request feel free to contact me on twitter (@ennioma).
 | :------ | :---- | :------------- |
 | `sh scripts/check-project.sh` | Linux or a Mac | `arek.xcodeproj` compiles every file of `code/Classes` and `arekTests`, its scheme tests `arekTests`, its Swift version and iOS deployment target are the podspec's, and every switch over an iOS status has an `@unknown default` (so that a newer SDK cannot break the build) |
 | `sh scripts/test-core.sh` | Linux or a Mac (Swift toolchain) | every test of `arekTests` against AREK's core (the popups, and when the re-enable popup may be shown again), with SwiftPM and a stand-in for UIKit |
+| `sh scripts/check-package.sh` | Linux or a Mac (Swift toolchain) | `Package.swift` and `arek.podspec` split AREK the same way (subspecs, files, frameworks, iOS version), and each permission compiles as a module of its own against `ArekCore`, with a stand-in for UIKit |
+| `sh scripts/check-package-consumer.sh` | a Mac with Xcode | an app that adds `ArekCore` and `ArekCamera` builds for the iOS simulator and links AVFoundation and no HealthKit; the same with `ArekHealth` links HealthKit |
 | `sh scripts/xcode.sh build` | a Mac with Xcode | the framework builds for the iOS simulator |
 | `sh scripts/xcode.sh test` | a Mac with Xcode | every test of `arekTests` in an iPhone simulator |
 
-[GitHub Actions](.github/workflows/ci.yml) runs all four on every push.
+[GitHub Actions](.github/workflows/ci.yml) runs every one of them but `check-package.sh` on a Mac on every push; the checks that need no Mac (`check-project.sh`, `test-core.sh`, `check-package.sh`) are also the gate of a change that is proved on Linux (`afk.yml`).
 
 <a name="todo"></a>
 # TODO

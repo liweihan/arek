@@ -23,7 +23,7 @@
 #   6. every permission file imports ArekCore where SwiftPM builds it as a module of its own
 #      (`#if canImport(ArekCore)`), and every permission, as a module of its own, type-checks against ArekCore as an
 #      app would see it: it uses nothing of the core that is not `public` or `open`. Needs swiftc: a UIKit stand-in
-#      (scripts/package-check/UIKit.swift) lets ArekCore compile on Linux, and each iOS framework a permission imports
+#      (scripts/stand-ins/UIKit.swift) lets ArekCore compile on Linux, and each iOS framework a permission imports
 #      is an empty module, so only the errors about AREK's own names are the check's (the frameworks' are not). A
 #      swiftc that fails for the core, for a stand-in module, or without a diagnostic we can read, fails the check;
 #   7. the source the podspec downloads (`s.source`: a tag or a commit) imports nothing the podspec does not link, and
@@ -251,10 +251,10 @@ failure_lines = lambda do |errors, output|
   lines.map { |line| line.strip.sub("#{ROOT}/", '') }
 end
 Dir.mktmpdir('arek-package-check') do |dir|
-  stub = File.join(ROOT, 'scripts/package-check/UIKit.swift')
+  stub = File.join(ROOT, 'scripts/stand-ins/UIKit.swift')
   stub_errors, stub_ok, stub_output = compile.call('-parse-as-library', '-emit-module', '-module-name', 'UIKit', stub,
                                                    '-emit-module-path', "#{dir}/UIKit.swiftmodule")
-  failure_lines.call(stub_errors, stub_output).each { |line| fail_with.call("scripts/package-check/UIKit.swift does not compile: #{line}") } unless stub_ok
+  failure_lines.call(stub_errors, stub_output).each { |line| fail_with.call("scripts/stand-ins/UIKit.swift does not compile: #{line}") } unless stub_ok
 
   core_files = files_of_target.fetch('ArekCore').map { |file| File.join(ROOT, file) }
   core_errors, core_ok, core_output = compile.call('-parse-as-library', '-emit-module', '-module-name', 'ArekCore', '-I', dir,

@@ -1,5 +1,6 @@
 # Proves a change of AREK on a Mac: the checks the factory's Linux boxes also run (scripts/check-project.sh,
-# scripts/test-core.sh), then the iOS framework's build and its XCTest target arekTests in an iPhone simulator.
+# scripts/test-core.sh), then the SwiftPM products as an app would add them (scripts/check-package-consumer.sh), the iOS
+# framework's build and its XCTest target arekTests in an iPhone simulator.
 name: CI
 
 on:
@@ -22,6 +23,8 @@ jobs:
         run: sh scripts/check-project.sh
       - name: Core tests (SwiftPM)
         run: sh scripts/test-core.sh
+      - name: SwiftPM consumers link what they use (Camera: no HealthKit)
+        run: sh scripts/check-package-consumer.sh
       - name: Build the framework
         run: sh scripts/xcode.sh build
       - name: arekTests in the iOS simulator
