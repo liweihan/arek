@@ -5,12 +5,17 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/liweihan/arek'
   s.license          = { :type => 'MIT', :file => 'LICENSE'}
   s.author           = { 'Ennio Masi' => 'ennio.masi@gmail.com' }
-  s.source           = { :git => 'https://github.com/liweihan/arek.git', :tag => s.version.to_s }
+  # This fork has published no release: its tag 4.0.2 is ennioma/arek's, whose core imports PMAlertController, which
+  # this podspec does not declare. The commit is one of this repository without that import (develop at a79a571);
+  # replace it with `:tag => s.version.to_s` when a release is tagged. scripts/check-package.sh reads the source this names.
+  s.source           = { :git => 'https://github.com/liweihan/arek.git', :commit => 'a79a5717e63d0639e526ed500b64f9c9b72e326c' }
   s.social_media_url = 'https://twitter.com/ennioma'
   s.ios.deployment_target = '12.0'
   s.swift_version    = '5.0'
-  s.source_files = 'code/Classes/**/*', 'code/Classes/Core/**/*', 'code/Classes/Permissions/**/*'
   s.exclude_files = 'Example/*'
+
+  # Every source file belongs to a subspec and the root declares none, so that `pod 'arek/Camera'` is Core + Camera and
+  # `pod 'arek'` is the union of the subspecs (scripts/check-package.sh checks both against Package.swift).
 
   s.subspec 'Core' do |ss|
     ss.source_files = 'code/Classes/Core/**/*.swift'
