@@ -20,7 +20,6 @@ Hacker News (search by name, stories): nothing about any of these in the last ye
 
 Read against `develop` on 2026-11-27.
 
-- A SwiftPM manifest with one product per permission (arek's `Package.swift` is still empty).
 - App Tracking Transparency: PermissionsKit has a Tracking permission, arek has no request for it.
   (FaceID is the other permission PermissionsKit lists that arek does not.)
 - A way to tell the newer states apart. arek already handles them, so this is not a missing case:
