@@ -6,6 +6,7 @@
 #
 #   ruby scripts/check-project.rb      (needs the xcodeproj gem: gem install --user-install xcodeproj)
 require 'xcodeproj'
+require 'yaml'
 
 ROOT = File.expand_path('..', __dir__)
 Dir.chdir(ROOT)
@@ -238,6 +239,43 @@ allowed = {
 check.call('the check for deprecated archiver calls sees them across line breaks and not in comments or strings',
            flagged.reject { |_, source| deprecated_archiver_calls.call(source).any? }.map { |what, _| "does not see: #{what}" } +
            allowed.select { |_, source| deprecated_archiver_calls.call(source).any? }.map { |what, _| "sees one in: #{what}" })
+
+# afk.yml is read by afk.build and .github/workflows/*.yml by GitHub, and neither says a word of a file it cannot parse:
+# GitHub marks the whole run failed in 0 s ("a workflow file issue"), and the proof of a change is then gone. A step
+# name with a `: ` in it, unquoted, did that on 2026-11-27. So the files are parsed here, on Linux, and the checks of
+# this directory are in the gate (afk.yml: what the factory's Linux boxes run) and in the macOS job (ci.yml: what needs
+# a Mac), so that a check that is written and never run cannot happen.
+parsed = {}
+parse_problems = (['afk.yml'] + Dir.glob('.github/workflows/*.{yml,yaml}').sort).flat_map do |path|
+  begin
+    parsed[path] = YAML.load_file(path)
+    []
+  rescue Psych::Exception, SystemCallError => e
+    ["#{path}: #{e.message.lines.first.to_s.strip}"]
+  end
+end
+check.call("afk.yml and every workflow of .github/workflows (#{parsed.size - (parsed.key?('afk.yml') ? 1 : 0)}) parse as YAML", parse_problems)
+
+GATE_STEPS = { 'project' => 'sh scripts/check-project.sh', 'core' => 'sh scripts/test-core.sh',
+               'package' => 'sh scripts/check-package.sh' }.freeze
+gate = parsed.dig('afk.yml', 'gate', 'steps') || []
+check.call("the gate of afk.yml runs #{GATE_STEPS.keys.join(', ')}, each fast and blocking",
+           GATE_STEPS.flat_map do |name, command|
+             step = gate.find { |candidate| candidate['name'] == name }
+             if step.nil?
+               ["no gate step #{name} (#{command})"]
+             else
+               [("step #{name} runs #{step['cmd'].inspect}, not #{command.inspect}" unless step['cmd'] == command),
+                ("step #{name} is tier #{step['tier'].inspect}, not fast" unless step['tier'] == 'fast'),
+                ("step #{name} is not blocking" unless step['blocking'] == true)].compact
+             end
+           end)
+
+CI_COMMANDS = ['sh scripts/check-project.sh', 'sh scripts/test-core.sh', 'sh scripts/check-package-consumer.sh',
+               'sh scripts/xcode.sh build', 'sh scripts/xcode.sh test'].freeze
+ran = (parsed.dig('.github/workflows/ci.yml', 'jobs', 'ios', 'steps') || []).map { |step| step['run'] }
+check.call("the macOS job ios of ci.yml runs #{CI_COMMANDS.size} commands of scripts/ (#{CI_COMMANDS.map { |c| c.sub('sh scripts/', '') }.join(', ')})",
+           (CI_COMMANDS - ran).map { |command| "the job ios does not run #{command}" })
 
 if failures.empty?
   puts 'project: every check passed'

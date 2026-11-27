@@ -23,7 +23,7 @@ jobs:
         run: sh scripts/check-project.sh
       - name: Core tests (SwiftPM)
         run: sh scripts/test-core.sh
-      - name: SwiftPM consumers link what they use (Camera: no HealthKit)
+      - name: SwiftPM consumers link what they use (Camera links no HealthKit)
         run: sh scripts/check-package-consumer.sh
       - name: Build the framework
         run: sh scripts/xcode.sh build
